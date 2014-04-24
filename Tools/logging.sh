@@ -28,7 +28,7 @@ where=$1
 why=$2
 what=$3
 
-if [ $1 == 'Installer']  # CAMBIAR SI EL INSTALLER TIENE OTRO NOMBRE O SI PASAMOS CON .sh!
+if [ $1 == 'Installer' ]  # CAMBIAR SI EL INSTALLER TIENE OTRO NOMBRE O SI PASAMOS CON .sh!
 then
 	LOGDIR='./grupo03/conf'
 	LOGEXT='log'

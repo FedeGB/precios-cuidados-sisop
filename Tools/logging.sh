@@ -28,22 +28,7 @@ where=$1
 why=$2
 what=$3
 
-numfields=`echo \`pwd\` | grep -o '/' | wc -l`
-numfields=`expr $numfields + 1` # le sumo 1 pues cut toma como field antes del / incial tambien
-pathconf=`echo \`pwd\` | cut -f"$numfields" -d'/' --complement` # llego hasta ../grupo03
-pathconf="$pathconf/conf"
-
-if [ $1 == 'installer' ]  # CAMBIAR SI EL INSTALLER TIENE OTRO NOMBRE O SI PASAMOS CON .sh!
-then
-	LOGDIR="$pathconf"
-	LOGEXT='log'
-else
-	LOGDIR=`echo \`grep '^LOGDIR' "$pathconf"/installer.conf\` | cut -f2 -d'='` # Suponiendo que LOGDIR tenga el path completo, sino se lo tengo que agregar
-	LOGEXT=`echo \`grep '^LOGEXT' "$pathconf"/installer.conf\` | cut -f2 -d'='` # Fijarse tambien que usamos como separador en las lineas!!
-fi
-
 LOGNAME="$where" # Si se pasa el comando con .sh habria que sacar el .sh de acá
-LOGSIZE=`echo \`grep '^LOGSIZE' "$pathconf"/installer.conf\` | cut -f2 -d'='` # En KB
 
 echo "$when-$who-$where-$what-$why" >> "$LOGDIR/$LOGNAME.$LOGEXT"
 
@@ -60,6 +45,12 @@ exit 0
 
 function reducir
 {
+	lineas=`wc -l < $1`
+	par=`expr $lineas - 50` # Para dejar las ultimas 50 lineas del log
+	split -l $par $1 $1 # el split divide a archivo con prefijoaa .. ab .. (prefijo = $3)
+	rm $1 # Borro el viejo
+	rm "$1""aa" 
+	mv "$1""ab" "$1" 
 
 	return 0
 }

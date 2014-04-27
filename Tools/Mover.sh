@@ -54,7 +54,7 @@ then
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.1"
 		if ! [ -z $CMD ]
 		then
-			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.1 pues $DEST ya existia"
+			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.1 pues $DESTNAME ya existia"
 		fi
 		exit 0
 	else
@@ -63,7 +63,7 @@ then
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.$N"
 		if ! [ -z $CMD ]
 		then
-			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.$N pues $DEST ya existia"
+			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.$N pues $DESTNAME ya existia"
 		fi
 		exit 0
 	fi

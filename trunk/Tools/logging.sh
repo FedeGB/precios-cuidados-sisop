@@ -63,7 +63,7 @@ echo "$when-$who-$where-$what-$why" >> "$dir/$LOGNAME.$LOGEXT"
 size=`wc -c < "$dir/$LOGNAME.$LOGEXT"`
 size=`expr $size / 1024` # lo paso a KB
 
-if [ $size -gt $LOGSIZE ]
+if [ $size -ge $LOGSIZE ]
 then
 	reducir "$dir/$LOGNAME.$LOGEXT"
 fi

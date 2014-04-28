@@ -45,7 +45,11 @@ do
 		echo Rechazado #rechazar $arch
 	else
 		if [[ esListaDeCompras $arch ]]; then
-			#statements
+			#Aceptar
+		else #ver de cambiar a elif
+			if [[ condition ]]; then
+				#statements
+			fi
 		fi
 	fi
 done

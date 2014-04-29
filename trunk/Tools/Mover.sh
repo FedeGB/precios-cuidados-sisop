@@ -34,15 +34,15 @@ then
 	exit -2
 fi
 
-DESTDIR=$( echo "$DEST" | sed "s-\(.*\)/.*\$-\1-")
-DESTNAME=$( echo "$DEST" | sed "s-\(.*\)/\(.*\)\$-\2-")
+DESTDIR=$( echo "$DEST" | sed "s-\(.*\)/[^/]*\$-\1-")
+DESTNAME=$( echo "$DEST" | sed "s-\(.*\)/\([^/]*\)\$-\2-")
 if ! [ -d "$DESTDIR" ]
 then
 	if ! [ -z "$CMD" ]
 	then
 		./logging.sh "$CMD" "No existe el directorio de destino: $DESTDIR" "ERR" 
 	fi
-	echo "No existe el directorio de destino"
+	echo "No existe el directorio de destino: $DESTDIR"
 	exit -2
 fi
 

@@ -24,9 +24,9 @@ then
 	CMD=$3
 fi
 
-if ! [ -f $ORG ]
+if ! [ -f "$ORG" ]
 then
-	if ! [ -z $CMD ]
+	if ! [ -z "$CMD" ]
 	then
 		./logging.sh "$CMD" "No existe el archivo de origen: $ORG" "ERR" 
 	fi
@@ -36,9 +36,9 @@ fi
 
 DESTDIR=$( echo "$DEST" | sed "s-\(.*\)/.*\$-\1-")
 DESTNAME=$( echo "$DEST" | sed "s-\(.*\)/\(.*\)\$-\2-")
-if ! [ -d $DESTDIR ]
+if ! [ -d "$DESTDIR" ]
 then
-	if ! [ -z $CMD ]
+	if ! [ -z "$CMD" ]
 	then
 		./logging.sh "$CMD" "No existe el directorio de destino: $DESTDIR" "ERR" 
 	fi
@@ -46,13 +46,13 @@ then
 	exit -2
 fi
 
-if [ -f $DEST ]
+if [ -f "$DEST" ]
 then
 	if ! [ -d "$DESTDIR/dup" ]
 	then
 		mkdir "$DESTDIR/dup"
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.1"
-		if ! [ -z $CMD ]
+		if ! [ -z "$CMD" ]
 		then
 			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.1 pues $DESTNAME ya existia"
 		fi
@@ -61,7 +61,7 @@ then
 		ACTN=$(ls "$DESTDIR/dup" -1 | grep "$DESTNAME\.[0-9]\{1,3\}" -c)
 		N=$(expr $ACTN + 1)
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.$N"
-		if ! [ -z $CMD ]
+		if ! [ -z "$CMD" ]
 		then
 			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.$N pues $DESTNAME ya existia"
 		fi
@@ -69,7 +69,7 @@ then
 	fi
 else
 	mv "$ORG" "$DEST"
-	if ! [ -z $CMD ]
+	if ! [ -z "$CMD" ]
 		then
 			./logging.sh "$CMD" "Se movio $ORG a $DEST"
 	fi

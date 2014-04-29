@@ -41,5 +41,42 @@ function sameUnit() {
 	return
 }
 
-resultado=$(sameUnit kg k)
-echo $resultado
+function getDescription() {
+	declare local descriptionRE="^[^;]*;(.*) .*$"
+	declare local description
+	if [[ $1 =~ $descriptionRE ]]; then
+		description=${BASH_REMATCH[1]}
+		echo $description
+	fi
+	return
+}
+
+function getUnit() {
+	declare local unitRE="^[^;]*;.* (.*)$"
+	declare local unit
+	if [[ $1 =~ $unitRE ]]; then
+		unit=${BASH_REMATCH[1]}
+		echo $unit
+	fi
+	return
+}
+
+#resultado=$(sameUnit kg k)
+oldIFS=$IFS
+IFS=$'\n'
+let cant=0
+for file in $(ls $ACEPDIR); do
+	let cant=cant+1
+	fileOK=$(checkFile $file)
+	if [[ $fileOK = "0" ]]; then
+		echo $file is ready to be processed \(moved to PROCDIR\)
+		for record in $(cat $ACEPDIR/$file); do
+			descriptionCompra=$(getDescription $record)
+			unitCompra=$(getUnit $record)
+			
+		done 
+	else 
+		echo $file cannot be processed \(moved to RECHDIR\)
+	fi
+done
+#sed 's/^[^;]*;\(.*\) .*$/\1/' $ACEPDIR/$file

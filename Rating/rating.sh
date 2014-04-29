@@ -43,4 +43,3 @@ function sameUnit() {
 
 resultado=$(sameUnit kg k)
 echo $resultado
-echo hola

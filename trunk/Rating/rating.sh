@@ -32,8 +32,8 @@ sameUnit
 function sameUnit() {
 	declare local line1
 	declare local line2
-	line1=$(cat "$TABLA" | grep $1 -n | sed 's/\([^;]*\):.*/\1/')
-	line2=$(cat "$TABLA" | grep $2 -n | sed 's/\([^;]*\):.*/\1/')	
+	line1=$(cat "$TABLA" | grep $1 -n -i | sed 's/\([^;]*\):.*/\1/')
+	line2=$(cat "$TABLA" | grep $2 -n -i| sed 's/\([^;]*\):.*/\1/')	
 	if [[ "$line1" = "$line2" ]]; then
 		echo "0"
 		return
@@ -43,48 +43,64 @@ function sameUnit() {
 }
 
 function getDescription() {
-	declare local descriptionRE="^[^;]*;(.*) .*$"
-	declare local description
-	if [[ $1 =~ $descriptionRE ]]; then
-		description=${BASH_REMATCH[1]}
-		echo $description
-	fi
+	echo $1 | grep "^[^;]*;[^;]* [^;]*$" | sed 's/^[^;]*;\([^;]*\) [^;]*$/\1/'
 	return
 }
 
 function getUnit() {
-	declare local unitRE="^[^;]*;.* (.*)$"
-	declare local unit
-	if [[ $1 =~ $unitRE ]]; then
-		unit=${BASH_REMATCH[1]}
-		echo $unit
-	fi
+	echo $1 | grep "^[^;]*;[^;]* [^;]*$" | sed 's/^[^;]*;[^;]* \([^;]*\)$/\1/'
 	return
 }
 
 function getMasterlistDescription() {
-	declare local descriptionRE="^[^;]*;[^;]*;[^;]*;([^;]*) .*;.*$"
-	declare local description
-	if [[ $1 =~ $descriptionRE ]]; then
-		description=${BASH_REMATCH[1]}
-		echo $description
-	fi
+	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;\([^;]*\) [^;]*;[^;]*$/\1/'
 	return
 }
 
 function getMasterlistUnit() {
-	declare local unitRE="^[^;]*;[^;]*;[^;]*;[^;]* (.*);.*$"
-	declare local unit
-	if [[ $1 =~ $unitRE ]]; then
-		unit=${BASH_REMATCH[1]}
-		echo $unit
-	fi
+	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;[^;]* \([^;]*\);[^;]*$/\1/'
 	return
 }
 
+function sameDescription() {
+	declare local oldIFS=$IFS
+	declare local counter
+	declare local listDescriptionTotalWords
+	let counter=0
+	IFS=$" "
+	let listDescriptionTotalWords=$(echo $1 | wc -w)
+	for word in $1; do
+			if [[ $(echo $2 | grep -i -c "$word") -ne "0" ]]; then
+				let counter=counter+1
+			fi
+	done
+	if [[ $counter -eq $listDescriptionTotalWords ]]; then
+		echo "0"
+	else
+		echo "1"
+	fi
+	IFS=$oldIFS
+	return
+}
+
+function writeMatch() {
+	declare local descriptionCompra=$(getDescription $1)
+	declare local unitCompra=$(getUnit $1)
+	declare local descriptionMaster
+	declare local unitMaster
+	for masterRecord in $(cat $MAESTRO); do
+		descriptionMaster=$(getMasterlistDescription $masterRecord)
+		unitMaster=$(getMasterlistUnit $masterRecord)	
+		if [[ $(sameUnit $unitMaster $unitCompra) = "0" ]]; then
+			#echo "$unitMaster y $unitCompra son la misma unidad"
+			if [[ $(sameDescription $descriptionCompra $descriptionMaster) = "0" ]]; then
+				echo "Producto pedido: $descriptionCompra Producto encontrado: $descriptionMaster -> GRABAR"
+			fi
+		fi
+	done
+}
 
 
-#resultado=$(sameUnit kg k)
 oldIFS=$IFS
 IFS=$'\n'
 let cant=0
@@ -94,12 +110,9 @@ for file in $(ls $ACEPDIR); do
 	if [[ $fileOK = "0" ]]; then
 		echo $file is ready to be processed \(moved to PROCDIR\)
 		for record in $(cat $ACEPDIR/$file); do
-			descriptionCompra=$(getDescription $record)
-			unitCompra=$(getUnit $record)
-
+			writeMatch $record		
 		done 
 	else 
 		echo $file cannot be processed \(moved to RECHDIR\)
 	fi
 done
-#sed 's/^[^;]*;\(.*\) .*$/\1/' $ACEPDIR/$file

@@ -1,44 +1,36 @@
 #!/bin/bash
 # Función Start para RETAILC
-# La función comienza procesos procesos devolviendo el valor del PID del mismo
-# Pre: Recibe como mínimo 2 parámetros.
+# La función comienza procesos procesos o en foreground o en background
+# Pre: Recibe como mínimo 2 parámetros. Deben estar inicializadas las variables de ambiente (ENVINIT=1)
 # $1: Tipo de ejecución (-f: foreground, -b: background) ambos en el contexto de quien lo ejecuta
-# $2: Nombre del comando (no se si pasandole ruta o no)
-# $3: Arreglo con parametros para el comando a ejectar
+# $2: Nombre del comando (sin .sh)
+# $N: Parametros para pasar al comando a ejecutar
 
 if [ $# -lt 2 ]
 then
-	echo "-1" # Faltan parámetros
+	echo "Faltan parámetros"
 	exit -1
 fi
 
 if ! [ $1 == "-f" -o $1 == "-b" ]
 then
-	echo -1 # el primer parametro es incorrecto
+	echo "El primer parametro es incorrecto"
 	exit -1
 fi
 
-if [ $1 == "-f" ]
-then
-	TIPO=""
-else
-	TIPO="&"
-fi
-
-CMD=$2
+CMD="$2.sh"
 
 PID=$(pgrep "$CMD")
 
 if [ -z $ENVINIT ]
 then
-	echo "-3" # El ambiente no está inicializado
+	echo "El ambiente no está inicializado"
 	exit -3
 fi
 
 if ! [ -z $PID ]
 then
-	./logging "$CMD" "El proceso $1 ya está corriendo" "WAR"
-	echo "$PID"
+	./logging "$2" "El proceso $1 ya está corriendo" "WAR"
 	exit 0
 fi
 
@@ -46,15 +38,23 @@ fi
 
 if [ $# -eq 2 ]
 then
-	. "$CMD" "$TIPO"
-else
-	PAR=$3
-	ISARRAY=$(declare -p "$PAR" | grep '^declare \-a' -c)
-	if [ ISARRAY -ne 0 ]
+	if [ "$TIPO" == "-f" ]
 	then
-		. "$CMD" "${$PAR[@]}" "$TIPO"
+		./"$CMD"
 	else
-		echo "-2" # Se debe pasar un arreglo como tercer parámetro
-		exit -2
+		./$CMD &
 	fi
+else
+	last=$(expr $# + 1)
+	declare -a PAR=("$@")
+	if [ "$TIPO" == "-b" ]
+	then
+		./$CMD "${PAR[@]:2:$last}" &
+	else
+		./"$CMD" "${PAR[@]:2:$last}"
+	fi
+	
 fi
+
+./logging "$2" "Comenzo la ejecución de $CMD con PID: $PID"
+exit 0

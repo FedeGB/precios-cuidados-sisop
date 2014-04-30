@@ -34,16 +34,45 @@ ACTUAL="`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`"
 PATHGROUP=`echo "$ACTUAL" | sed "s-\(.*\)/grupo03/.*-\1/grupo03-"`
 PATHCONF="$PATHGROUP/conf"
 
+### Permisos de archivos
+
+# 755 rwx-rx-rx
+# 666 rw-rw-rw
+# 555 rx-rx-rx
+
+### Funciones del script
+
+function iniciarLog {
+	# Inicio variable locales para comenzar el log, luego lo muevo a su carpeta correspondiente
+	# Y se setearan los valores correspondientes a las variables
+	export LOGSIZE=400
+	export LOGEXT="tmp"
+	export GRUPO=$PATHGROUP
+	export LOGDIR="$GRUPO"
+	
+	./logging.sh "Initializer" "Comando Initializer: Inicio de Ejecución"
+	
+	unset LOGDIR
+	unset LOGEXT
+	unset LOGSIZE
+	unset GRUPO
+
+	return 0
+}
+
 function cargarVariablesConf
 {
 	for i in "${VARARCHCONF[@]}"
 	do
 		eval "$i"=`echo \`grep '^"$i"' "$PATHCONF"/installer.conf\` | cut -f2 -d'='`
+		if [ -z "$i" ]
+		then
+			return -1
+		fi
 	done
 
 	return 0
 }
-
 
 
 ### Comienzo script
@@ -56,5 +85,7 @@ then
 		exit 0
 	fi
 fi
+
+iniciarLog
 
 

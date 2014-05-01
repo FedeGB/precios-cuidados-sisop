@@ -142,6 +142,16 @@ for [ archivoPrecios in $(ls $pathPrecios) ]; do
 	superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
 
 	fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
+	fechaArchivo=`echo $fechaArchivo | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
+	fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
+
+	if [ $fechaArchivo -eq -1 ]; then # Archivo de lista de precios con fecha invalida, se rechaza.
+		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "ERR";
+		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+		bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+		continue;
+	fi	
+
 	if [ -e $preciosMae ]; then	
 		busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
 		busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1

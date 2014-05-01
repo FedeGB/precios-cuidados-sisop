@@ -48,14 +48,16 @@ then
 	echo "No se encuentra el archivo de configuración.
 	No se puede inicializar RETAILC."
 	exit -2
+else
+	chmod 444 "$PATHCONF"
 fi
 
 export GRUPO=`echo \`grep '^GRUPO' "$PATHCONF"/installer.conf\` | cut -f2 -d'='`
 ### Permisos de archivos
 
-# 755 rwx-rx-rx
 # 666 rw-rw-rw
 # 555 rx-rx-rx
+# 444 r-r-r
 
 ### Funciones del script
 
@@ -73,6 +75,8 @@ function iniciarLog
 	if ! [ -f "$GRUPO/$BINDIR/logging.sh" ]
 	then
 		return 1
+	else
+		chmod 555 "$GRUPO/$BINDIR/logging.sh"
 	fi
 	$GRUPO/$BINDIR/logging.sh "Initializer" "Comando Initializer: Inicio de Ejecución"
 	return 0
@@ -85,10 +89,11 @@ function cargarVariablesConf
 		export eval "$i"=$(echo `grep "^$i" $PATHCONF/installer.conf` | cut -f2 -d'=')
 		if [ -z "${!i}" ]
 		then
+			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta la variable $i en el archivo de configuración" "ERR"
 			return 1
 		fi
 	done
-
+	# Al archivo .conf ya le di permisos de lectura
 	return 0
 }
 
@@ -98,7 +103,10 @@ function verificarEx
 	do
 		if ! [ -f "$GRUPO/$BINDIR/$x" ]
 		then
+			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el ejecutable $x en el directorio $BINDIR" "ERR"
 			return 1
+		else
+			chmod 555 "$GRUPO/$BINDIR/$x"
 		fi
 	done
 
@@ -108,18 +116,44 @@ function verificarEx
 function verificarArchivos
 {
 	PRE="$GRUPO/$MAEDIR"
-	if ! [ -f $PRE/um.tab ]
+	if ! [ -f "$PRE/um.tab" ]
 	then
+		$GRUPO/$BINDIR/logging.sh "Initializer" "Falta la tabla del sistema um.tab" "ERR"
 		return 1
-	elif ! [ -f $PRE/asociados.mae ]
+	else
+		chmod 444 "$PRE/um.tab"
+	if ! [ -f "$PRE/asociados.mae" ]
 	then
-		return -1
-	elif ! [ -f $PRE/super.mae ]
-	then
+		$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el archivo maestro asociados.mae" "ERR"
 		return 1
+	else
+		chmod 444 "$PRE/asociados.mae"
+	if ! [ -f "$PRE/super.mae" ]
+	then
+		$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el archivo maestro super.mae" "ERR"
+		return 1
+	else
+		chmod 444 "$PRE/super.mae"
 	fi
 
 	return 0
+}
+
+ function verificarAmbiente
+ {
+ 	if ! [ -z $ENVINIT ]
+	then
+		echo "El ambiente ya está inicializado, si quiere reiniciar termine su sesión e ingrese nuevamente"
+		$GRUPO/$BINDIR/logging.sh "Initializer" "Ambiente ya fue inicializado" "ERR"
+		exit -1
+	else
+		export ENVINIT=1 # Marco que está inicializado el ambiente
+	fi
+ }
+
+function verificarPermisos
+{
+
 }
 
 ### Comienzo script
@@ -146,7 +180,6 @@ if [ $? -eq 1 ]
 then
 	echo "Faltan variables en el archivo de configuración.
 $REINSTALL"
-$GRUPO/$BINDIR/logging.sh "Initializer" "Faltan variables en el archivo de configuración" "ERR"
 exit -2
 fi
 $GRUPO/$BINDIR/logging.sh "Initializer" "Se cargó satisfactoriamente el archivo de configuración" 
@@ -156,7 +189,6 @@ if [ $? -eq 1 ]
 then
 	echo "Faltan ejecutales para la correcta ejecución del programa.
 $REINSTALL"
-$GRUPO/$BINDIR/logging.sh "Initializer" "Faltan ejecutables en el directorio $BINDIR" "ERR"
 exit -2
 fi
 $GRUPO/$BINDIR/logging.sh "Initializer" "Se identificaron todos los ejecutables necesarios"
@@ -166,14 +198,14 @@ if [ $? -eq 1 ]
 then
 	echo "Faltan archivos maestros y/o tablas del sistema.
 $REINSTALL"
-$GRUPO/$BINDIR/logging.sh "Initializer" "Faltan archivos maestros y/o tablas del sistema" "ERR"
 exit -2
 fi
 $GRUPO/$BINDIR/logging.sh "Initializer" "Se encontraron los archivos maestros y tablas del sistema"
 
-if ! [ -z ENVINIT ]
-then
-	echo "El ambiente ya está inicializado, si quiere reiniciar termine su sesión e ingrese nuevamente"
-	$GRUPO/$BINDIR/logging.sh "Initializer" "Ambiente ya fue inicializado" "ERR"
-	exit -1
-fi
+verificarAmbiente
+$GRUPO/$BINDIR/logging.sh "Initializer" "Se incializo correctamente el ambiente"
+ 
+# Seteo variable PATH para los ejecutables
+export PATH=$PATH:"$GRUPO/$BINDIR"
+
+

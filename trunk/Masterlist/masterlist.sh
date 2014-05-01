@@ -30,7 +30,7 @@ function validarRegistroCabecera
 		fi
 	fi
 
-	if [ $6 -eq -1 ]; then
+	if [ $6 -eq -1 ]; then # Verifico correo electronico
 		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "ERR";
 		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash ../Tools/Mover.sh $pathPrecios/$1 $GRUPO/$RECHDIR/$1 "Masterlist";
@@ -126,7 +126,7 @@ for [ archivoPrecios in $(ls $pathPrecios) ]; do
 		continue;
 	fi
 	superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
-	#No contempla si no existe precios.mae...>crear precios.mae...>mover archivoPrecios a proc
+
 	fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
 	if [ -e $preciosMae ]; then	
 		busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado

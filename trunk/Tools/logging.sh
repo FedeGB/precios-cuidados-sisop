@@ -5,10 +5,11 @@
 # INFO = INFORMATIVO: mensajes explicativos sobre el curso de ejecución del comando.
 # WAR = WARNING: mensajes de advertencia pero que no afectan la continuidad de ejecución del comando.
 # ERR = ERROR: mensajes de error.
+# Por default, si no se le pase 3er parametro, el tipo de mensaje es informativo
 
-if [ $# -lt 3 ]
+if [ $# -lt 2 ] # El 3ro se puede no pasar nada y queda el default
 then
-	echo "Faltan parametros" # Esto deberia ir a un log? Idem para el resto de las verificaciones
+	echo "Faltan parametros" 
 	exit -1
 fi 
 if [ $# -gt 3 ]
@@ -16,28 +17,55 @@ then
 	echo "Hay parametros demas"
 	exit -1
 fi
-if [ $3 <> 'INF' -o $3 <> 'WAR' -o $3 <> 'ERR' ]
+ 
+if [ $1 == "installer" ]
 then
-	echo "El tercer parametro no es ni INF ni WAR ni ERR"
-	exit -1
+	if [ -z ${CONFDIR} ]
+	then
+		echo "No esta seteada la variable CONFDIR"
+		exit -3
+	elif [ -z ${GRUPO} ]
+	then
+		echo "No esta seteada la variable GRUPO"
+		exit -3
+	fi
+	dir="$GRUPO/$CONFDIR" # El instalador debe setear variables GRUPO y CONFDIR para poder usar el logging
+	LOGEXT="log"
+else
+	dir="$GRUPO/$LOGDIR"
 fi
 
-when=`date +"$F %T"`
+when=`date +"%F %T"`
 who=$USER
 where=$1
 why=$2
-what=$3
-
-if [ $1 == 'Installer']  # CAMBIAR SI EL INSTALLER TIENE OTRO NOMBRE O SI PASAMOS CON .sh!
+if [ $# == 2 ]
 then
-	LOGDIR='./grupo03/conf'
-	LOGEXT='log'
+	what='INF'
 else
-	LOGDIR=`echo \`grep '^LOGDIR' ./grupo03/conf/Installer.conf\` | cut -f2 -d'='` # Suponiendo que LOGDIR tenga el path completo, sino se lo tengo que agregar
-	LOGEXT=`echo \`grep '^LOGEXT' ./grupo03/conf/Installer.conf\` | cut -f2 -d'='` # Fijarse tambien que usamos como separador en las lineas!!
+	what=$3
 fi
 
-LOGNAME="$where" # Si se pasa el comando con .sh habria que sacar el .sh de acá
-LOGSIZE=`echo \`grep '^LOGSIZE' ./grupo03/conf/Installer.conf\` | cut -f2 -d'='` # En KB
+LOGNAME="$where"
+
+
+echo "$when-$who-$where-$what-$why" >> "$dir/$LOGNAME.$LOGEXT"
+
+size=`wc -c < "$dir/$LOGNAME.$LOGEXT"`
+size=`expr $size / 1024` # lo paso a KB
+
+if [ $size -gt $LOGSIZE ]
+then
+	reducir "$dir/$LOGNAME.$LOGEXT"
+fi
 
 exit 0
+
+
+function reducir
+{
+	tail -50 "$1" > "$1.tmp" # Me quedo con las ultimas 50 lineas
+	mv "$1.tmp" "$1" # Piso el viejo con el nuevo
+
+	return 0
+}

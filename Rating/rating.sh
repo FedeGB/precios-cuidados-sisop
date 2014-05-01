@@ -218,12 +218,13 @@ IFS=$'\n'
 let cant=0
 cantListas=$(ls $ACEPDIR | wc -l)
 $LOGGER "Rating" "Cantidad de listas de compras a procesar: $cantListas "
+echo "Rating - Rating iniciado."
 for file in $(ls $ACEPDIR); do
 	let cant=cant+1
 	$LOGGER "Rating" "Archivo a procesar: $file"
 	fileOK=$(checkFile $file)
+	echo "Rating - Procesando lista de compra: $file"
 	if [[ $fileOK = "0" ]]; then
-		echo "$file is ready to be processed (moved to PROCDIR)"
 		for record in $(cat $ACEPDIR$file); do
 			if [[ ! $(validRecord "$record") = "" ]]; then
 				findMatches $record >> "${INFODIR}presupuestadas/$file"
@@ -240,3 +241,4 @@ for file in $(ls $ACEPDIR); do
 done
 IFS=$oldIFS
 $LOGGER "Rating" "Fin de Rating."
+echo "Rating - Fin de Rating"

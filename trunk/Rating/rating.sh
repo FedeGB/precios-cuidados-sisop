@@ -1,33 +1,38 @@
 #comentario
 #
 ERROR=0
-ACEPDIR=/home/ubuntu/precios-cuidados-sisop/Rating/aceptados
-PROCDIR=/home/ubuntu/precios-cuidados-sisop/Rating/procesados
-RECHDIR=/home/ubuntu/precios-cuidados-sisop/Rating/rechazados
-BASE="$( cd "$( dirname "${BASH_SOURCE[0]}")" && pwd )"
+ACEPDIR=/home/ubuntu/precios-cuidados-sisop/Rating/aceptados/
+PROCDIR=/home/ubuntu/precios-cuidados-sisop/Rating/procesados/
+RECHDIR=/home/ubuntu/precios-cuidados-sisop/Rating/rechazados/
+INFODIR=/home/ubuntu/precios-cuidados-sisop/Rating/
 MOVER='../Tools/Mover.sh'
 LOGGER='../Tools/logging.sh'
 TABLA="../Datos/Maestros y tablas/um.tab"
-MAESTRO="precios.mae"
+MAESTRO='precios.mae'
+export LOGDIR="/home/ubuntu/precios-cuidados-sisop/Rating/"
+export LOGEXT="log"
+export LOGSIZE="400"
 
 <<CheckFile 
 	Checks that a file is not empty nor already processed. Returns zero if OK.
 CheckFile
 
 function checkFile() {
-	if [[ -f $PROCDIR/$1 ]]; then
-		echo "Archivo duplicado -> Mover a RECHAZADOS"
+	if [[ -f $PROCDIR$1 ]]; then
+		echo "DUPLICADO"
 		return
 	fi
-	if [[ ! -s $ACEPDIR/$1 ]]; then
-		echo "Archivo vacío -> Mover a RECHAZADOS"
+	if [[ ! -s $ACEPDIR$1 ]]; then
+		echo "VACÍO"
 		return
 	fi
 		echo "0"
 }
 
 <<sameUnit
-	Checks if 2 units are actually the same, by using the unit table.	
+	Checks if 2 units are actually the same, by using the unit table.
+	$1: 1st Unit
+	$2: 2nd Unit
 sameUnit
 
 function sameUnit() {
@@ -43,20 +48,40 @@ function sameUnit() {
 	return
 }
 
+<<getDescription
+	Returns the product's description of a "lista de compras" record.
+	$1: "lista de compras" record.
+getDescription
+
 function getDescription() {
 	echo $1 | grep "^[^;]*;[^;]* [^;]*$" | sed 's/^[^;]*;\([^;]*\) [^;]*$/\1/'
 	return
 }
+
+<<getUnit
+	Returns the unit of a "lista de compras" product.
+	$1: "lista de compras" record.
+getUnit
 
 function getUnit() {
 	echo $1 | grep "^[^;]*;[^;]* [^;]*$" | sed 's/^[^;]*;[^;]* \([^;]*\)$/\1/'
 	return
 }
 
+<<getMasterlistDescription
+	Returns the description of a Masterlist product.
+	$1: Masterlist record.
+getMasterlistDescription
+
 function getMasterlistDescription() {
 	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;\([^;]*\) [^;]*;[^;]*$/\1/'
 	return
 }
+
+<<getMasterlistUnit
+	Returns the unit of a Masterlist product.	
+	$1: Masterlist record.
+getMasterlistUnit
 
 function getMasterlistUnit() {
 	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;[^;]* \([^;]*\);[^;]*$/\1/'
@@ -84,6 +109,12 @@ function sameDescription() {
 	return
 }
 
+<<filterSameDescriptions
+	Given a string and the Masterlist, this function returns a filtered Masterlist that contains the same description as the string.
+	$1: String.
+	$2: Masterlist.	
+filterSameDescriptions
+
 function filterSameDescriptions() {
 	declare local maestroFiltrado=$(cat $2)
 	for word in $(splitIntoWords "$1"); do
@@ -92,6 +123,11 @@ function filterSameDescriptions() {
 	echo "$maestroFiltrado"
 	return
 }
+
+<<splitIntoWords
+	Returns each word of a string.	
+	$1: String.
+splitIntoWords
 
 function splitIntoWords() {
 	declare local oldIFS=$IFS	
@@ -102,6 +138,12 @@ function splitIntoWords() {
 	IFS=$oldIFS	
 	return
 }
+
+<<findMatches
+	Returns a list with the matches of a "lista de compras" product in the Masterlist.	
+	$1: "lista de compras" record.
+	$2: Masterlist.
+findMatches
 
 function findMatches() {
 	declare local descriptionCompra=$(getDescription $1)
@@ -125,20 +167,41 @@ function findMatches() {
 	return	
 }
 
+<<validRecord
+	Valids a "lista de compras" record.
+	$1: "lista de compras" record.
+validRecord
+
+function validRecord() {
+	echo $1 | grep "^[^;]*;[^;]*$"
+	return
+}
+
 $LOGGER "Rating" "Inicio de Rating"
 oldIFS=$IFS
 IFS=$'\n'
 let cant=0
+cantListas=$(ls $ACEPDIR | wc -l)
+$LOGGER "Rating" "Cantidad de listas de compras a procesar: $cantListas "
 for file in $(ls $ACEPDIR); do
 	let cant=cant+1
+	$LOGGER "Rating" "Archivo a procesar: $file"
 	fileOK=$(checkFile $file)
 	if [[ $fileOK = "0" ]]; then
 		echo "$file is ready to be processed (moved to PROCDIR)"
-		for record in $(cat $ACEPDIR/$file); do
-			findMatches $record >> "$file"
+		for record in $(cat $ACEPDIR$file); do
+			if [[ ! $(validRecord "$record") = "" ]]; then
+				findMatches $record >> "${INFODIR}presupuestadas/$file"
+			else
+				$LOGGER "Rating" "Ignorado registro de lista de compras del archivo $file por formato inválido." "WAR"
+			fi
 		done 
+		$MOVER "$ACEPDIR$file" "$PROCDIR"
 	else 
+		$LOGGER "Rating" "El archivo $file se rechaza por estar $fileOK" "ERR"
 		echo "$file cannot be processed (moved to RECHDIR)"
+		$MOVER "$ACEPDIR$file" "$RECHDIR"
 	fi
 done
 IFS=$oldIFS
+$LOGGER "Rating" "Fin de Rating."

@@ -68,6 +68,16 @@ function getUnit() {
 	return
 }
 
+<<getProductNumber
+	Returns the first field of a "lista de compras" record.
+	$1: "lista de compras" record.
+getProductNumber
+
+function getProductNumber() {
+	echo $1 | grep "^[^;]*;[^;]* [^;]*$" | sed 's/^\([^;]*\);[^;]* [^;]*$/\1/'
+	return
+}
+
 <<getMasterlistDescription
 	Returns the description of a Masterlist product.
 	$1: Masterlist record.
@@ -85,6 +95,26 @@ getMasterlistUnit
 
 function getMasterlistUnit() {
 	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;[^;]* \([^;]*\);[^;]*$/\1/'
+	return
+}
+
+<<getMasterlistSuperID
+	Returns the SuperID of a Masterlist product.
+	$1: Masterlist record.
+getMasterlistSuperID
+
+function getMasterlistSuperID() {
+	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^\([^;]*\);[^;]*;[^;]*;[^;]* [^;]*;[^;]*$/\1/'
+	return
+}
+
+<<getMasterlistPrice
+	Returns the price of a Masterlist product.
+	$1: Masterlist record.
+getMasterlistPrice
+
+function getMasterlistPrice() {
+	echo $1 | grep "^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;[^;]*$" | sed 's/^[^;]*;[^;]*;[^;]*;[^;]* [^;]*;\([^;]*\)$/\1/'
 	return
 }
 
@@ -148,6 +178,9 @@ findMatches
 function findMatches() {
 	declare local descriptionCompra=$(getDescription $1)
 	declare local unitCompra=$(getUnit $1)
+	declare local productNumberCompra=$(getProductNumber $1)
+	declare local superID
+	declare local price
 	declare local descriptionMaster
 	declare local unitMaster
 	declare local counter
@@ -155,14 +188,16 @@ function findMatches() {
 	for masterRecord in $(filterSameDescriptions $descriptionCompra $MAESTRO); do
 		descriptionMaster=$(getMasterlistDescription $masterRecord)
 		unitMaster=$(getMasterlistUnit $masterRecord)
+		superID=$(getMasterlistSuperID $masterRecord)
+		price=$(getMasterlistPrice $masterRecord)		
 		if [[ $(sameUnit $unitMaster $unitCompra) = "0" ]]; then
 			#echo "$unitMaster y $unitCompra son la misma unidad"
-				echo "Producto pedido: $descriptionCompra $unitCompra Producto encontrado: $descriptionMaster $unitMaster"
+				echo "$productNumberCompra;$descriptionCompra $unitCompra;$superID;$descriptionMaster $unitMaster;$price"
 				let counter=$counter+1
 		fi
 	done
 	if [[ "$counter" = "0" ]]; then
-		echo "El producto pedido $descriptionCompra $unitCompra no se encuentra en el maestro."
+		echo "$productNumberCompra;$descriptionCompra $unitCompra;;;"
 	fi
 	return	
 }

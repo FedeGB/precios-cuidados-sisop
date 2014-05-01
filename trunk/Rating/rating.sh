@@ -103,19 +103,26 @@ function splitIntoWords() {
 	return
 }
 
-function writeMatch() {
+function findMatches() {
 	declare local descriptionCompra=$(getDescription $1)
 	declare local unitCompra=$(getUnit $1)
 	declare local descriptionMaster
 	declare local unitMaster
+	declare local counter
+	let counter=0
 	for masterRecord in $(filterSameDescriptions $descriptionCompra $MAESTRO); do
 		descriptionMaster=$(getMasterlistDescription $masterRecord)
-		unitMaster=$(getMasterlistUnit $masterRecord)	
+		unitMaster=$(getMasterlistUnit $masterRecord)
 		if [[ $(sameUnit $unitMaster $unitCompra) = "0" ]]; then
 			#echo "$unitMaster y $unitCompra son la misma unidad"
-				echo "Producto pedido: $descriptionCompra $unitCompra Producto encontrado: $descriptionMaster $unitMaster -> GRABAR"
+				echo "Producto pedido: $descriptionCompra $unitCompra Producto encontrado: $descriptionMaster $unitMaster"
+				let counter=$counter+1
 		fi
 	done
+	if [[ "$counter" = "0" ]]; then
+		echo "El producto pedido $descriptionCompra $unitCompra no se encuentra en el maestro."
+	fi
+	return	
 }
 
 $LOGGER "Rating" "Inicio de Rating"
@@ -126,12 +133,12 @@ for file in $(ls $ACEPDIR); do
 	let cant=cant+1
 	fileOK=$(checkFile $file)
 	if [[ $fileOK = "0" ]]; then
-		echo $file is ready to be processed \(moved to PROCDIR\)
+		echo "$file is ready to be processed (moved to PROCDIR)"
 		for record in $(cat $ACEPDIR/$file); do
-			writeMatch $record
+			findMatches $record >> "$file"
 		done 
 	else 
-		echo $file cannot be processed \(moved to RECHDIR\)
+		echo "$file cannot be processed (moved to RECHDIR)"
 	fi
 done
 IFS=$oldIFS

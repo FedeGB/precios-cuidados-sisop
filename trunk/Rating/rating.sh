@@ -6,6 +6,7 @@ PROCDIR=/home/ubuntu/precios-cuidados-sisop/Rating/procesados
 RECHDIR=/home/ubuntu/precios-cuidados-sisop/Rating/rechazados
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}")" && pwd )"
 MOVER='../Tools/Mover.sh'
+LOGGER='../Tools/logging.sh'
 TABLA="../Datos/Maestros y tablas/um.tab"
 MAESTRO="precios.mae"
 
@@ -112,11 +113,12 @@ function writeMatch() {
 		unitMaster=$(getMasterlistUnit $masterRecord)	
 		if [[ $(sameUnit $unitMaster $unitCompra) = "0" ]]; then
 			#echo "$unitMaster y $unitCompra son la misma unidad"
-				echo "Producto pedido: $descriptionCompra Producto encontrado: $descriptionMaster -> GRABAR"
+				echo "Producto pedido: $descriptionCompra $unitCompra Producto encontrado: $descriptionMaster $unitMaster -> GRABAR"
 		fi
 	done
 }
 
+$LOGGER "Rating" "Inicio de Rating"
 oldIFS=$IFS
 IFS=$'\n'
 let cant=0

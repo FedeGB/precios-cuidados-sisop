@@ -1,11 +1,5 @@
 #!/bin/bash
 
-pathPreios="$GRUPO/$MAEDIR/precios"
-pathProcesados="$pathPrecios/proc"
-superMae="$GRUPO/$MAEDIR/super.mae"
-asociadosMae="$GRUPO/$MAEDIR/asociados.mae"
-preciosMae="$GRUPO/$MAEDIR/precios.mae"
-
 function validarRegistroCabecera
 {	
 	if [ $2 -eq -1 ]; then
@@ -88,6 +82,12 @@ function procesarReemplazo
 
 }
 
+pathPreios="$GRUPO/$MAEDIR/precios"
+pathProcesados="$pathPrecios/proc"
+superMae="$GRUPO/$MAEDIR/super.mae"
+asociadosMae="$GRUPO/$MAEDIR/asociados.mae"
+preciosMae="$GRUPO/$MAEDIR/precios.mae"
+
 #Inicio del archivo de Log
 bash ../Tools/logging.sh "Masterlist" "Inicio de Masterlist"
 cantidadArchivos=`ls $pathPreios | wc -l`
@@ -127,22 +127,27 @@ for [ archivoPrecios in $(ls $pathPrecios) ]; do
 	fi
 	superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
 	#No contempla si no existe precios.mae...>crear precios.mae...>mover archivoPrecios a proc
-	busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
-	busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
 	fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
-	if [ $busquedaRegistro -ne -1 ]; then
-		fechaRegistro=`echo $busquedaRegistro | sed 's-^[^;]*;[^;]*;\([0-9]\{4\}[0-1][0-9][0-3][0-9]\);.*-\1-'`
-		compararFechas "$fechaRegistro" "$fechaArchivo"
-		if [ $? -eq 1 ]; then
-			#procesarReemplzo;
-			#Mover a proc
-		else 
-			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "ERR";
-			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$GRUPO/$RECHDIR/$archivoPrecios";
-			bash ../Tools/Mover.sh $pathPrecios/$archivoPrecios $GRUPO/$RECHDIR/$archivoPrecios "Masterlist";
+	if [ -e $preciosMae ]; then	
+		busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
+		busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		if [ $busquedaRegistro -ne -1 ]; then
+			fechaRegistro=`echo $busquedaRegistro | sed 's-^[^;]*;[^;]*;\([0-9]\{4\}[0-1][0-9][0-3][0-9]\);.*-\1-'`
+			compararFechas "$fechaRegistro" "$fechaArchivo"
+			if [ $? -eq 1 ]; then
+				#procesarReemplzo;
+				#Mover a proc
+			else 
+				bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "ERR";
+				bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+				bash ../Tools/Mover.sh $pathPrecios/$archivoPrecios $GRUPO/$RECHDIR/$archivoPrecios "Masterlist";
+			fi
+		else
+			#procesarAltas
+			#mover a proc
 		fi
-	else
+	else 
 		#procesarAltas
-		#mover a rec
+		#mover a proc
 	fi
 done

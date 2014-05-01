@@ -7,7 +7,7 @@ RECHDIR=/home/ubuntu/precios-cuidados-sisop/Rating/rechazados
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}")" && pwd )"
 MOVER='../Tools/Mover.sh'
 TABLA="../Datos/Maestros y tablas/um.tab"
-MAESTRO="../Datos/Maestros y tablas/preciosExample.mae"
+MAESTRO="precios.mae"
 
 <<CheckFile 
 	Checks that a file is not empty nor already processed. Returns zero if OK.
@@ -83,23 +83,39 @@ function sameDescription() {
 	return
 }
 
+function filterSameDescriptions() {
+	declare local maestroFiltrado=$(cat $2)
+	for word in $(splitIntoWords "$1"); do
+		maestroFiltrado=$(echo "$maestroFiltrado" | grep -i "^[^;]*;[^;]*;[^;]*;[^;]*${word}[^;]* [^;]*;[^;]*$")
+	done
+	echo "$maestroFiltrado"
+	return
+}
+
+function splitIntoWords() {
+	declare local oldIFS=$IFS	
+	IFS=$" "
+	for word in $1; do
+		echo $word
+	done
+	IFS=$oldIFS	
+	return
+}
+
 function writeMatch() {
 	declare local descriptionCompra=$(getDescription $1)
 	declare local unitCompra=$(getUnit $1)
 	declare local descriptionMaster
 	declare local unitMaster
-	for masterRecord in $(cat $MAESTRO); do
+	for masterRecord in $(filterSameDescriptions $descriptionCompra $MAESTRO); do
 		descriptionMaster=$(getMasterlistDescription $masterRecord)
 		unitMaster=$(getMasterlistUnit $masterRecord)	
 		if [[ $(sameUnit $unitMaster $unitCompra) = "0" ]]; then
 			#echo "$unitMaster y $unitCompra son la misma unidad"
-			if [[ $(sameDescription $descriptionCompra $descriptionMaster) = "0" ]]; then
 				echo "Producto pedido: $descriptionCompra Producto encontrado: $descriptionMaster -> GRABAR"
-			fi
 		fi
 	done
 }
-
 
 oldIFS=$IFS
 IFS=$'\n'
@@ -110,9 +126,10 @@ for file in $(ls $ACEPDIR); do
 	if [[ $fileOK = "0" ]]; then
 		echo $file is ready to be processed \(moved to PROCDIR\)
 		for record in $(cat $ACEPDIR/$file); do
-			writeMatch $record		
+			writeMatch $record
 		done 
 	else 
 		echo $file cannot be processed \(moved to RECHDIR\)
 	fi
 done
+IFS=$oldIFS

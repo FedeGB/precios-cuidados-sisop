@@ -173,3 +173,8 @@ for [ archivoPrecios in $(ls $pathPrecios) ]; do
 		bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 	fi
 done
+
+#Fin del archivo de Log
+bash ../Tools/logging.sh "Masterlist" "Fin de Masterlist"
+
+exit 0

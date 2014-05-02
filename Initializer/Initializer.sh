@@ -25,6 +25,9 @@ VARLOG=("BINDIR" "LOGDIR" "LOGEXT" "LOGSIZE")
 # Ejecutables
 VAREX=("logging.sh" "Start.sh" "Stop.sh" "Mover.sh")
 
+# Directorios
+VARDIR=("MAEDIR" "NOVEDIR" "ACEPDIR" "RECHDIR" "INFODIR")
+
 # Mesajes generales
 REINSTALL="Por favor, vuelva a instalar el programa nuevamente.
 Para ello inicie el instalador y siga los pasos correctamente.
@@ -48,7 +51,7 @@ then
 	No se puede inicializar RETAILC."
 	exit -2
 else
-	chmod 444 "$PATHCONF"
+	chmod 444 "$PATHCONF/installer.conf"
 fi
 
 export GRUPO=`echo \`grep '^GRUPO' "$PATHCONF"/installer.conf\` | cut -f2 -d'='`
@@ -96,6 +99,27 @@ function cargarVariablesConf
 	return 0
 }
 
+function verficarDirectorios
+{
+	for d in "${VARDIR[@]}"
+	do
+		if ! [ -d "$GRUPO/${!d}" ]
+		then
+			if [ $d == "MAEDIR" ]
+			then
+				echo "Faltan directorios que contienen archivos imporatntes.
+				$REINSTALL"
+				$GRUPO/$BINDIR/logging.sh "Initializer" "Falta un directorio que contiene archivos importantes"
+				exit -2
+			fi
+			mkdir $GRUPO/$d
+			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio $d. Se creo para continuar funcionamiento"
+		fi
+	done
+
+	return 1
+}
+
 function verificarEx
 {
 	for x in "${VAREX[@]}"
@@ -106,6 +130,7 @@ function verificarEx
 			return 1
 		else
 			chmod 555 "$GRUPO/$BINDIR/$x"
+			$GRUPO/$BINDIR/logging.sh "Initializer" "$x fue otorgado con permisos de ejecución y lectura"
 		fi
 	done
 
@@ -121,18 +146,23 @@ function verificarArchivos
 		return 1
 	else
 		chmod 444 "$PRE/um.tab"
+		$GRUPO/$BINDIR/logging.sh "Initializer" "um.tab fue otorgado con permisos de lectura"
+	fi
 	if ! [ -f "$PRE/asociados.mae" ]
 	then
 		$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el archivo maestro asociados.mae" "ERR"
 		return 1
 	else
 		chmod 444 "$PRE/asociados.mae"
+		$GRUPO/$BINDIR/logging.sh "Initializer" "asociados.mae fue otorgado con permisos de lectura"
+	fi
 	if ! [ -f "$PRE/super.mae" ]
 	then
 		$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el archivo maestro super.mae" "ERR"
 		return 1
 	else
 		chmod 444 "$PRE/super.mae"
+		$GRUPO/$BINDIR/logging.sh "Initializer" "super.mae fue otorgado con permisos de lectura"
 	fi
 
 	return 0
@@ -157,7 +187,7 @@ function verificarArchivos
  	while [ $VALIDO -eq 0 ]
  	do
  		read CHOICE
- 		if [ $CHOICE == "s"]
+ 		if [ $CHOICE == "s" ]
  		then
  			$GRUPO/$BINDIR/logging.sh "Initializer" "Inicializando listener"
  			$GRUPO/$BINDIR/Start.sh "Initializer" "-b" listener # Verifica si el proceso está corriendo o no
@@ -200,7 +230,7 @@ function verificarArchivos
  	ls $GRUPO/$LOGDIR -1
  	echo "Estado del sistema: INICIALIZADO"
  	LISPID=$(pgrep "listener.sh")
- 	if [ $LISPID -ne 0 ]
+ 	if ! [ -z $LISPID ]
  	then
  		echo "Listener corriendo bajo el no.: $LISPID"
  	else
@@ -239,6 +269,9 @@ exit -2
 fi
 $GRUPO/$BINDIR/logging.sh "Initializer" "Se cargó satisfactoriamente el archivo de configuración" 
 
+verficarDirectorios
+$GRUPO/$BINDIR/logging.sh "Initializer" "Se completó verificación de directorios"
+
 verificarEx
 if [ $? -eq 1 ]
 then
@@ -264,5 +297,7 @@ $GRUPO/$BINDIR/logging.sh "Initializer" "Se incializo correctamente el ambiente"
 export PATH=$PATH:"$GRUPO/$BINDIR"
 
 iniciarDaemon
+
+estadoFinal
 
 exit 0

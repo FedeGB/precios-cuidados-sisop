@@ -117,78 +117,83 @@ bash ../Tools/logging.sh "Masterlist" "Cantidad de Listas de precios a procesar:
 
 IFS=$'\n' # Modifico Internal Field Separator
 
-for [ archivoPrecios in $(ls $pathPrecios) ]; do 
-	bash ../Tools/logging.sh "Masterlist" "Archivo a procesar: $archivoPrecios"
-	if [ -e $pathProcesados/$archivoPrecios ]; then #Archivo ya procesado
-		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por estar DUPLICADO" "ERR";
-		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-		bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
-		continue;
-	fi
-	cabecera=`sed -n '1p' "$pathPrecios/$archivoPrecios"` # Obtengo el registro de cabecera
-	nombreSuper=`echo $cabecera | sed 's-^\([^;]*\);.*-\1-'`
-	nombreProv=`echo $cabecera | sed 's-^[^;]*;\([^;]*\);.*-\1-'`
-	busquedaSuper=`grep "^[^;]*;$nombreProv;$nombreSuper;[^;]*;[^;]*;[^;]*$" $superMae`
-	busquedaSuper=`echo $busquedaSuper | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-	usuario=`echo $pathPrecios/$archivoPrecios | sed 's-^[^.]*.\(.*\)$-\1-'`
-	cantidadCampos=`echo $cabecera | sed 's-^[^;]*;[^;]*;\([1-9]*\).*-\1-'`
-	cantidadCampos=`echo $cantidadCampos | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-	posProducto=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
-	posProducto=`echo $posProducto | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-	posPrecio=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
-	posPrecio=`echo $posPrecio | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-	mailColaborador=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;\([^;]*\)$-\1-'`
+if [ $cantidadArchivos -eq 0 ]; then
+	echo "No hay archivos para procesar.";
+	exit -1;
+else 
+	for [ archivoPrecios in $(ls $pathPrecios) ]; do 
+		bash ../Tools/logging.sh "Masterlist" "Archivo a procesar: $archivoPrecios"
+		if [ -e $pathProcesados/$archivoPrecios ]; then #Archivo ya procesado
+			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por estar DUPLICADO" "ERR";
+			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+			bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+			continue;
+		fi
+		cabecera=`sed -n '1p' "$pathPrecios/$archivoPrecios"` # Obtengo el registro de cabecera
+		nombreSuper=`echo $cabecera | sed 's-^\([^;]*\);.*-\1-'`
+		nombreProv=`echo $cabecera | sed 's-^[^;]*;\([^;]*\);.*-\1-'`
+		busquedaSuper=`grep "^[^;]*;$nombreProv;$nombreSuper;[^;]*;[^;]*;[^;]*$" $superMae`
+		busquedaSuper=`echo $busquedaSuper | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		usuario=`echo $pathPrecios/$archivoPrecios | sed 's-^[^.]*.\(.*\)$-\1-'`
+		cantidadCampos=`echo $cabecera | sed 's-^[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		cantidadCampos=`echo $cantidadCampos | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		posProducto=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		posProducto=`echo $posProducto | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		posPrecio=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		posPrecio=`echo $posPrecio | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		mailColaborador=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;\([^;]*\)$-\1-'`
 	
-	busquedaUsuario=`grep "^[^;]*;[^;]*;$usuario;[^;]*;$mailColaborador$" $asociadosMae` # Busco si existe registro con ese usuario y mail
-	busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+		busquedaUsuario=`grep "^[^;]*;[^;]*;$usuario;[^;]*;$mailColaborador$" $asociadosMae` # Busco si existe registro con ese usuario y mail
+		busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
 
-	validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario"
-		continue;
-	fi
-	superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
+		validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario"
+			continue;
+		fi
+		superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
 
-	fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
-	fechaArchivo=`echo $fechaArchivo | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
-	fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
+		fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
+		fechaArchivo=`echo $fechaArchivo | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
+		fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
 
-	if [ $fechaArchivo -eq -1 ]; then # Archivo de lista de precios con fecha invalida, se rechaza.
-		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "ERR";
-		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-		bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
-		continue;
-	fi	
+		if [ $fechaArchivo -eq -1 ]; then # Archivo de lista de precios con fecha invalida, se rechaza.
+			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "ERR";
+			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+			bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+			continue;
+		fi	
 
-	if [ -e $preciosMae ]; then	
-		busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
-		busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-		if [ $busquedaRegistro -ne -1 ]; then
-			fechaRegistro=`echo $busquedaRegistro | sed 's-^[^;]*;[^;]*;\([0-9]\{4\}[0-1][0-9][0-3][0-9]\);.*-\1-'`
-			compararFechas "$fechaArchivo" "$fechaRegistro"
-			if [ $? -eq 1 ]; then
-				cantidadRegistrosEliminados=`echo sed 's/^\($superID;$usuario;$fechaRegistro;.*\)$/\1/' $preciosMae | wc -l`
-				sed -i 's/^$superID;$usuario;$fechaRegistro;.*$//g' $preciosMae #Elimino los registros viejos 
-				sed -i '/^$/d' $preciosMae #Elimino las lineas en blanco producto de eliminar registros
-				procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaRegistro" "$fechaArchivo" "$posPrecio" "posProducto";
-				bash ../Tools/logging.sh "Masterlist" "Registros eliminados: $cantidadRegistrosEliminados" "INF";
+		if [ -e $preciosMae ]; then	
+			busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
+			busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
+			if [ $busquedaRegistro -ne -1 ]; then
+				fechaRegistro=`echo $busquedaRegistro | sed 's-^[^;]*;[^;]*;\([0-9]\{4\}[0-1][0-9][0-3][0-9]\);.*-\1-'`
+				compararFechas "$fechaArchivo" "$fechaRegistro"
+				if [ $? -eq 1 ]; then
+					cantidadRegistrosEliminados=`echo sed 's/^\($superID;$usuario;$fechaRegistro;.*\)$/\1/' $preciosMae | wc -l`
+					sed -i 's/^$superID;$usuario;$fechaRegistro;.*$//g' $preciosMae #Elimino los registros viejos 
+					sed -i '/^$/d' $preciosMae #Elimino las lineas en blanco producto de eliminar registros
+					procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaRegistro" "$fechaArchivo" "$posPrecio" "posProducto";
+					bash ../Tools/logging.sh "Masterlist" "Registros eliminados: $cantidadRegistrosEliminados" "INF";
+					bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
+					bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";			
+				else 
+					# La fecha del registro encontrado en precios.mae es mayor a la fecha del archido a procesar
+					bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "ERR";
+					bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+					bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+				fi
+			else
+				procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "posProducto";
 				bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
-				bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";			
-			else 
-				# La fecha del registro encontrado en precios.mae es mayor a la fecha del archido a procesar
-				bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "ERR";
-				bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-				bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+				bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
 			fi
-		else
+		else 
 			procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "posProducto";
 			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
 			bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
 		fi
-	else 
-		procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "posProducto";
-		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
-		bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
-	fi
-done
+	done
+fi
 
 #Fin del archivo de Log
 bash ../Tools/logging.sh "Masterlist" "Fin de Masterlist"

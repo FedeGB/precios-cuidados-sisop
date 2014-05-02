@@ -2,39 +2,39 @@
 
 function validarRegistroCabecera
 {	
-	if [ $2 -eq -1 ]; then
+	if [[ "$2" == "-1" ]]; then
 		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Supermercado inexistente" "ERR";
 		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash ../Tools/Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
-		return -2;
+		return 2;
 	fi
 
-	if [ $3 -eq -1 ]; then # Verifico cantidad de campos
+	if [[ $3 -eq -1 ]]; then # Verifico cantidad de campos
 		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Cantidad de campos invalida" "ERR";
 		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash ../Tools/Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
-		return -2;
+		return 2;
 	else
-		if [[ $4 -eq -1 ]] || [[ $4 -gt $3 ]] || [[ $4 -eq $5 ]]; then # Verifico posicion producto
+		if [[ $4 -eq -1 || $4 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion producto
 			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Posicion producto invalida" "ERR";
 			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 			bash ../Tools/Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
-			return -2;
+			return 2;
 		fi 					
 		
-		if [[ $5 -eq -1 ]] || [[ $5 -gt $3 ]] || [[ $4 -eq $5 ]]; then # Verifico posicion precio
+		if [[ $5 -eq -1 || $5 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion precio
 			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Posicion precio invalida" "ERR";
 			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 			bash ../Tools/Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
-			return -2;
+			return 2;
 		fi
 	fi
 
-	if [ $6 -eq -1 ]; then # Verifico correo electronico
+	if [[ "$6" == "-1" ]]; then # Verifico correo electronico
 		bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "ERR";
 		bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash ../Tools/Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
-		return -2;
+		return 2;
 	fi
 
 	return 0
@@ -87,10 +87,10 @@ function procesarArchivo
 		# valido precio y nombre
 		precio=`echo $registro | cut -d ";" -f $6`
 		producto=`echo $registro | cut -d ";" -f $7`
-		producto=`echo $producto | sed 's-^$-\-1-'` # Si no hay match lo cambio a -1
+		producto=`echo $producto | sed 's-^$-\-1-'` # Si el nombre es vacio lo cambio a -1
 		precio=`echo $precio | grep '^[0-9]\+\.[0-9]\+$'`
 		precio=`echo $precio | sed 's-^$-\-1-'` # Si no hay match lo cambio a -1
-		if [ [ $precio -eq -1 ] -o [ $producto -eq -1 ] ]; then
+		if [[ "$precio" == "-1" || "$producto" == "-1" ]]; then
 			cantidadRegistrosNok=`expr $cantidadRegistrosNok + 1`;
 			continue;
 		else 
@@ -104,7 +104,7 @@ function procesarArchivo
 }
 
 # Variables
-pathPreios="$GRUPO/$MAEDIR/precios"
+pathPrecios="$GRUPO/$MAEDIR/precios"
 pathProcesados="$pathPrecios/proc"
 superMae="$GRUPO/$MAEDIR/super.mae"
 asociadosMae="$GRUPO/$MAEDIR/asociados.mae"
@@ -113,12 +113,13 @@ preciosMae="$GRUPO/$MAEDIR/precios.mae"
 #Inicio del archivo de Log
 bash ../Tools/logging.sh "Masterlist" "Inicio de Masterlist"
 cantidadArchivos=`ls $pathPreios | wc -l`
+cantidadArchivos=`expr $cantidadArchivos - 1`
 bash ../Tools/logging.sh "Masterlist" "Cantidad de Listas de precios a procesar: $cantidadArchivos"
 #Fin cabecera de log
 
 IFS=$'\n' # Modifico Internal Field Separator
 
-if [ $cantidadArchivos -eq 0 ]; then
+if [[ $cantidadArchivos -eq 0 ]]; then
 	echo "No hay archivos para procesar.";
 else
 	for archivoPrecios in $(ls $pathPrecios); do 
@@ -147,7 +148,7 @@ else
 		busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
 
 		validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario"
-		if [ $? -eq -2 ]; then
+		if [[ $? -eq 2 ]]; then
 			continue;
 		fi
 		superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
@@ -156,20 +157,20 @@ else
 		fechaArchivo=`echo $fechaArchivo | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
 		fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
 
-		if [ $fechaArchivo -eq -1 ]; then # Archivo de lista de precios con fecha invalida, se rechaza.
+		if [[ "$fechaArchivo" == "-1" ]]; then # Archivo de lista de precios con fecha invalida, se rechaza.
 			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "ERR";
 			bash ../Tools/logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
 			bash ../Tools/Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 			continue;
 		fi	
 
-		if [ -e $preciosMae ]; then	
+		if [[ -e $preciosMae ]]; then	
 			busquedaRegistro=`grep -m 1 "^$superID;$usuario;[^;]*;[^;]*;[^;]*$" $preciosMae` # Busco algun match para el superID y usuario dado
 			busquedaRegistro=`echo $busquedaRegistro | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-			if [ $busquedaRegistro -ne -1 ]; then
+			if [[ $busquedaRegistro -ne -1 ]]; then
 				fechaRegistro=`echo $busquedaRegistro | sed 's-^[^;]*;[^;]*;\([0-9]\{4\}[0-1][0-9][0-3][0-9]\);.*-\1-'`
 				compararFechas "$fechaArchivo" "$fechaRegistro"
-				if [ $? -eq 1 ]; then
+				if [[ $? -eq 1 ]]; then
 					cantidadRegistrosEliminados=`echo sed 's/^\($superID;$usuario;$fechaRegistro;.*\)$/\1/' $preciosMae | wc -l`
 					sed -i 's/^$superID;$usuario;$fechaRegistro;.*$//g' $preciosMae #Elimino los registros viejos 
 					sed -i '/^$/d' $preciosMae #Elimino las lineas en blanco producto de eliminar registros

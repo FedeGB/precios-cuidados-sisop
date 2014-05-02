@@ -76,7 +76,13 @@ function procesarArchivo
 {
 	cantidadRegistrosOk=0
 	cantidadRegistrosNok=0
-	while read -r registro; do
+	esPrimeroRegistro=1
+	for registro in $(<$pathPrecios/$1); do
+		# Si es el primer registro (header) lo salteo
+		if [ $esPrimeroRegistro -eq 1 ]; then
+			esPrimeroRegistro=0;
+			continue;
+		fi
 		# valido precio y nombre
 		precio=`echo $registro | cut -d ";" -f $6`
 		producto=`echo $registro | cut -d ";" -f $7`
@@ -90,12 +96,13 @@ function procesarArchivo
 			cantidadRegistrosOk=`expr $cantidadRegistrosOk + 1`;
 			echo "$3;$4;$5;$producto;$precio" >> $2;
 		fi
-	done < $pathPrecios/$1
+	done
 	bash ../Tools/logging.sh "Masterlist" "Archivo $1 ha sido procesado" "INF";
 	bash ../Tools/logging.sh "Masterlist" "Registros ok: $cantidadRegistrosOk" "INF";
 	bash ../Tools/logging.sh "Masterlist" "Registros nok: $cantidadRegistrosNok" "INF";
 }
 
+# Variables
 pathPreios="$GRUPO/$MAEDIR/precios"
 pathProcesados="$pathPrecios/proc"
 superMae="$GRUPO/$MAEDIR/super.mae"
@@ -135,8 +142,7 @@ for [ archivoPrecios in $(ls $pathPrecios) ]; do
 	busquedaUsuario=`grep "^[^;]*;[^;]*;$usuario;[^;]*;$mailColaborador$" $asociadosMae` # Busco si existe registro con ese usuario y mail
 	busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
 
-	validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario" #ver parametros que tal vez esten de mas
-	if [ $? -eq -2 ]; then
+	validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario"
 		continue;
 	fi
 	superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`

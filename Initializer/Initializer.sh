@@ -1,6 +1,5 @@
 #!/bin/bash
 # Initializer que por ahora solo inicia variables de ambiente, con la estructura de directorios actuales
-# Para que las inicie, hay que correr este script con ". initializer.sh" para que este en el contexto de la consola, sino no las setea (y no se puede hacer desde script, ya probe y busque...)
 
 ### Variables a setear
 
@@ -17,10 +16,10 @@ LOGDIR=""
 LOGEXT=""
 LOGSIZE=""
 
-# Variables que leemos del archivo de configuracion
+# Variables que leemos del archivo de configuracion (sin incluir las necesarias para logging)
 VARARCHCONF=("CONFDIR" "MAEDIR" "NOVEDIR" "DATASIZE" "ACEPDIR" "RECHDIR" "INFODIR")
 
-# Variables para el log
+# Variables para poder loggear
 VARLOG=("BINDIR" "LOGDIR" "LOGEXT" "LOGSIZE")
 
 # Ejecutables
@@ -151,10 +150,66 @@ function verificarArchivos
 	fi
  }
 
-function verificarPermisos
-{
+ function iniciarDaemon
+ {
+ 	echo "¿Desea efectuar la activación del Listener? Si(s)-No(n)"
+ 	VALIDO=0
+ 	while [ $VALIDO -eq 0 ]
+ 	do
+ 		read CHOICE
+ 		if [ $CHOICE == "s"]
+ 		then
+ 			$GRUPO/$BINDIR/logging.sh "Initializer" "Inicializando listener"
+ 			$GRUPO/$BINDIR/Start.sh "Initializer" "-b" listener # Verifica si el proceso está corriendo o no
+ 			VALIDO=1
+ 		elif [ $CHOICE == "n" ]
+ 		then
+ 			echo "Usted eligio no inicializr el listener.
+ 			Para ejecutarlo hagalo a traves del comando Start:
+ 			Start.sh NULL -b"
+ 			$GRUPO/$BINDIR/logging.sh "Initializer" "El listener no fue inicializado"
+ 			VALIDO=1
+ 		else
+ 			echo "La respuesta ingresada no es válida.
+ 			Nuevamente, si quiere inicializar el listener
+ 			responda s (Si), de lo contrario n (No)"
+ 		fi
 
-}
+ 	done
+
+ 	echo "Para detener el listener use el comando Stop:
+ 	Stop.sh listener"
+
+ 	return 0
+ }
+
+ function estadoFinal
+ {
+ 	echo "TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright Grupo 03"
+ 	echo "Directorio de configuración: $CONFDIR"
+ 	ls $GRUPO/$CONFDIR -1
+ 	echo "Directorio de ejecutables: $BINDIR"
+ 	ls $GRUPO/$BINDIR -1
+ 	echo "Directorio de Maestros y Tablas: $MAEDIR"
+ 	ls $GRUPO/$MAEDIR -1
+ 	echo "Directorio de Novedades: $NOVEDIR" 
+ 	echo "Directorio de Novedades aceptadas: $ACEPDIR"
+ 	echo "Directorio de Informes de Salida: $INFODIR"
+ 	echo "Directorio de Archivos Rechazados: $RECHDIR"
+ 	echo "Directorio de los Logs de Comandos: $LOGDIR"
+ 	ls $GRUPO/$LOGDIR -1
+ 	echo "Estado del sistema: INICIALIZADO"
+ 	LISPID=$(pgrep "listener.sh")
+ 	if [ $LISPID -ne 0 ]
+ 	then
+ 		echo "Listener corriendo bajo el no.: $LISPID"
+ 	else
+ 		echo "Listener no está corriendo"
+ 	fi
+
+ 	return 0
+ }
+
 
 ### Comienzo script
 
@@ -208,4 +263,6 @@ $GRUPO/$BINDIR/logging.sh "Initializer" "Se incializo correctamente el ambiente"
 # Seteo variable PATH para los ejecutables
 export PATH=$PATH:"$GRUPO/$BINDIR"
 
+iniciarDaemon
 
+exit 0

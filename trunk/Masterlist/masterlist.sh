@@ -74,6 +74,7 @@ function compararFechas
 
 function procesarArchivo
 {
+	IFS=$'\n' # Modifico Internal Field Separator (tal vez este de mas)
 	cantidadRegistrosOk=0
 	cantidadRegistrosNok=0
 	esPrimeroRegistro=1
@@ -120,7 +121,7 @@ IFS=$'\n' # Modifico Internal Field Separator
 if [ $cantidadArchivos -eq 0 ]; then
 	echo "No hay archivos para procesar.";
 else
-	for [ archivoPrecios in $(ls $pathPrecios) ]; do 
+	for archivoPrecios in $(ls $pathPrecios); do 
 		bash ../Tools/logging.sh "Masterlist" "Archivo a procesar: $archivoPrecios"
 		if [ -e $pathProcesados/$archivoPrecios ]; then #Archivo ya procesado
 			bash ../Tools/logging.sh "Masterlist" "Se rechaza el archivo por estar DUPLICADO" "ERR";
@@ -146,6 +147,7 @@ else
 		busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
 
 		validarRegistroCabecera "$archivoPrecios" "$busquedaSuper" "$cantidadCampos" "$posProducto" "$posPrecio" "$busquedaUsuario"
+		if [ $? -eq -2 ]; then
 			continue;
 		fi
 		superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`

@@ -113,7 +113,7 @@ function verficarDirectorios
 				exit -2
 			fi
 			mkdir $GRUPO/$d
-			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio $d. Se creo para continuar funcionamiento"
+			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio $d. Se creo para continuar funcionamiento" "WAR"
 		fi
 	done
 

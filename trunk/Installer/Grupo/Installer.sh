@@ -1,22 +1,25 @@
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-NUMGRUPO='06'
+GRUPO="."
 
 VERSION='v1.0'
 
-ARCHIVOLOG="Log"
+ARCHIVOLOG="logging.sh"
 
 LOG=". ${BASE}/${ARCHIVOLOG}"
 
-CONFDIR="${BASE}/conf"
+#CONFDIR="${BASE}/conf"
+CONFDIR="/conf"
 
 SRCDIR="${BASE}/src/"
 
-LOG_INSTALACION="${CONFDIR}/Installer.log"
+LOG_INSTALACION="${CONFDIR}/Installer"
 
 CONF_INSTALACION="${CONFDIR}/Installer.conf"
 
-SCRIPTS=('Initializer' 'Listener' 'Masterlist' 'Rating' 'Reporting' 'Mover' 'Start' 'Stop' 'Log')
+PERL_VER_REQ=5
+
+SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.sh' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
 
 
 BINDIR=bin
@@ -66,9 +69,20 @@ function showHelp() {
         echo "-h                                Muestra esta ayuda"
 }
 
+function iniciarLog() {
+	echo -n "Inicializar log. . . ."
+	#copio script logging
+        cp "${SRCDIR}${ARCHIVOLOG}" "$BASE"
+        chmod u+x "${SRCDIR}${ARCHIVOLOG}"
+	[ -d $lOG_INSTALACION ] || mkdir $lOG_INSTALACION
+	#$LOG "installer" "Log instalado"
+	echo "sarasa"
+}
+
+
 function chequearFuentes() {
 	local FALTANTES
-
+	
 	echo -n "Chequeando Fuentes . . . . "
 	#$LOG 'Instalar_TP' 'Comprobando Fuentes de Instalación'
 	# Busco directorios faltantes
@@ -88,24 +102,19 @@ function chequearFuentes() {
 	[ ${#FALTANTES[@]} -gt 0 ] && echo -e "$MSG"
 	#$LOG 'Instalar_TP' 'Paquete de instalación completo'
 	# Si no está el confdir, lo creo
-	[ -d $CONFDIR ] || mkdir $CONFDIR
+	[ -d "${BASE}/conf" ] || mkdir "${BASE}/conf"
 	echo "HECHO"
 }
 
 
-function iniciarLog() {
-	#copio script logging
-        #cp "${SRCDIR}${ARCHIVOLOG}" "$BASE"
-        #chmod u+x "${SRCDIR}${ARCHIVOLOG}"
 
-	echo "Inicializar log"
-}
-
-function ubicarLog() {
+function mostrarUbicacionLog() {
 	echo "Log de la instalación: CONFDIR/Installer.log"
+	#$LOG "installer" "Log de la instalación: CONFDIR/Installer.log"
 }
 
-function ubicarConf() {
+function mostrarUbicacionConf() {
+	#$LOG "installer" "Directorio predefinido de Configuración: CONFDIR"
 	echo "Directorio predefinido de Configuración: CONFDIR"
 }
 
@@ -194,9 +203,11 @@ while [ $instalado -eq 0 ]; do
         OPCION=$(echo "$OPCION" | tr [:upper:] [:lower:])
         [ "$OPCION" = 'si' -o "$OPCION" = 's' -o "$OPCION" = '' ] && instalado=1
 	if [ "$OPCION" == '' ]; then
-	      $LOG "Instalar_TP" "Si"
+		echo "log"
+	      #$LOG "Instalar_TP" "Si"
 	else
-	      $LOG "Instalar_TP" "$OPCION"
+		echo "log"
+	      #$LOG "Instalar_TP" "$OPCION"
 	fi
 done
 
@@ -217,6 +228,11 @@ function CrearJerarquia() {
         IFS=$TMP
 }
 
+function GuardarDatos() {
+        local REG="$1"="$2"=$(whoami)=$(date +"%d/%m/%y %r")
+        echo "$REG" >> ${BASE}/$CONF_INSTALACION
+}
+
 
 function instalarDirectorios() {
 echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
@@ -233,7 +249,7 @@ done
 echo HECHO
 
 # Copio los archivos necesarios para la ejecución del sistema
-echo -n "Instalando Archivos Maestros y Tablas "
+echo -n "Instalando Archivos Maestros y Tablas. . . . "
 local mae_files
 for file in $(ls ${SRCDIR}/*.mae); do
         cp "$file" "$MAEDIR"
@@ -242,7 +258,15 @@ for file in $(ls ${SRCDIR}/*.mae); do
 done
 
 
-echo -n "Instalando Programas y Funciones"
+local tab_files
+for file in $(ls ${SRCDIR}/*.tab); do
+        cp "$file" "$MAEDIR"
+        file=${file##*/}
+        tab_files+="${file#$BASE}"'$'
+done
+echo "HECHO"
+
+echo -n "Instalando Programas y Funciones. . . ."
 local script_files
 for script in "${SCRIPTS[@]}"; do
         cp "${SRCDIR}/${script}" "$BINDIR"
@@ -254,9 +278,13 @@ done
 BASE1="${BASE}/"
 
 echo -n "Actualizando la configuración del sistema . . . . "
-local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR ARRIDIR ACEPDIR RECHDIR REPODIR PROCDIR LOGDIR LOGEXT LOGSIZE DATASIZE)
-local VALORES=("$BASE" "${CONFDIR#$BASE1}" "${BINDIR#$BASE1}" "${MAEDIR#$BASE1}" "${ARRIDIR#$BASE1}" "${ACEPDIR#$BASE1}" "${RECHDIR#$BASE1}" "${REPODIR#$BASE1}" "${PROCDIR#$BASE1}" "${LOGDIR#$BASE1}" "${LOGEXT#$BASE1}" "${LOGSIZE#$BASE1}" "${DATASIZE#$BASE1}")
+local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR DATASIZE ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE )
+local VALORES=("$BASE" "${CONFDIR#$BASE1}" "${BINDIR#$BASE1}" "${MAEDIR#$BASE1}" "${NOVEDIR#$BASE1}" "${DATASIZE#$BASE1}" "${ACEPDIR#$BASE1}" "${INFODIR#$BASE1}" "${RECHDIR#$BASE1}"  "${LOGDIR#$BASE1}" "${LOGEXT#$BASE1}" "${LOGSIZE#$BASE1}")
 
+	[ -d $lOG_INSTALACION ] || mkdir $lOG_INSTALACION
+
+#creo archivo d configuracion
+[ -d $CONF_INSTALACION ] || mkdir $CONF_INSTALACION
 
 # Guardo las decisiones del usuario
 for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
@@ -285,29 +313,26 @@ function etapas() {
 function startInstall() {
 	echo "Inicio de Ejecución del Installer"
 
-	iniciarLog
-	etapas
+	mostrarUbicacionLog
 
-	ubicarLog
-	etapas
 
-	ubicarConf
-	etapas
+	mostrarUbicacionConf
+
 
 	chequearInstalacion
-	etapas
+
 
 	terminosYcondiciones
-	etapas
+
 
 	comprobarPerl
-	etapas
+
 
 	definirDirectorios
-	etapas
+
 
 	instalarDirectorios
-	etapas
+
 }
 
 #main
@@ -315,6 +340,7 @@ function startInstall() {
 # Configuro el script de log para poder usarlo en la instalación
 if [ $# -eq 0 ]; then
 	chequearFuentes	
+	iniciarLog
 	startInstall
 	echo 'instalacion completa'
 

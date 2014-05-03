@@ -26,7 +26,7 @@ VARLOG=("BINDIR" "LOGDIR" "LOGEXT" "LOGSIZE")
 VAREX=("logging.sh" "Start.sh" "Stop.sh" "Mover.sh")
 
 # Directorios
-VARDIR=("MAEDIR" "NOVEDIR" "ACEPDIR" "RECHDIR" "INFODIR")
+VARDIR=("BINDIR" "MAEDIR" "NOVEDIR" "ACEPDIR" "RECHDIR" "INFODIR")
 
 # Mesajes generales
 REINSTALL="Por favor, vuelva a instalar el programa nuevamente.
@@ -80,6 +80,11 @@ function iniciarLog
 	else
 		chmod 555 "$GRUPO/$BINDIR/logging.sh"
 	fi
+	if ! [[ -d $GRUPO/$LOGDIR ]]
+	then
+		mkdir $GRUPO/$LOGDIR
+		$GRUPO/$BINDIR/logging.sh "Initializer" "No existia el directorio $LOGDIR. Creado." "WAR"
+	fi
 	$GRUPO/$BINDIR/logging.sh "Initializer" "Comando Initializer: Inicio de Ejecución"
 	return 0
 }
@@ -112,8 +117,8 @@ function verficarDirectorios
 				$GRUPO/$BINDIR/logging.sh "Initializer" "Falta un directorio que contiene archivos importantes"
 				exit -2
 			fi
-			mkdir $GRUPO/$d
-			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio $d. Se creo para continuar funcionamiento" "WAR"
+			mkdir $GRUPO/${!d}
+			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio ${!d}. Se creo para continuar funcionamiento" "WAR"
 		fi
 	done
 

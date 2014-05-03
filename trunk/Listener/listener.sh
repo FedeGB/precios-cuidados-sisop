@@ -42,19 +42,19 @@ function usuario_es_asociado
 #Guarda en $prob por qué se rechazó (si corresponde "" sino)
 function es_lista_compras
 {
-	$prob=""
-        declare local usuario=`echo $1 | grep "^\([^\.]\)*\.[^- ]\{3\}$" | sed 's~^\([^\.]*\)\.[^- ]\{3\}$~\1~'`
-        if [[ "$usuario" == "" ]]; then
-        	$prob="Formato invalido"
-                return 0
-        else
-                usuario_es_asociado $usuario
-                res=$?
-                if [[ $res -ne 0 ]]; then
-                	$prob="Asociado inexistente"
-                fi
-                return `expr 1 - $res`
-        fi
+	prob=""
+	declare local usuario=`echo $1 | grep "^\([^\.]\)*\.[^- ]\{3\}$" | sed 's~^\([^\.]*\)\.[^- ]\{3\}$~\1~'`
+	if [[ "$usuario" == "" ]]; then
+		prob="Formato invalido"
+		return 0
+	else
+		usuario_es_asociado $usuario
+		res=$?
+		if [[ $res -ne 0 ]]; then
+			prob="Asociado inexistente"
+		fi
+			
+	fi
 }
 
 
@@ -67,12 +67,12 @@ function in_range
 {
 	if [ $1 -lt $2 ];
 	then
-	    return 0
+		return 0
 	elif [ $1 -gt $3 ];
 	then
-	    return 0
+		return 0
 	else
-	    return 1
+		return 1
 	fi
 }
 
@@ -146,10 +146,14 @@ function disparar_proceso
 	fi
 }
 
+#Si el ambiente no está inicializado salgo con error.
+if [[ -z $ENVINIT ]]; then
+	logging.sh listener "Ambiente no inicializado" ERR
+	exit 1
+fi
 #Ciclo infinito
 while [[ 1 ]]; do
 	#Para cada archivo en $NOVEDIR ver que sea lista de compras o precios, sino rechazar
-	################################AMBIENTE INICIALIZADO?####################################
 	#Grabar en el log el nro de ciclo
 	CANTCICLOS=`expr $CANTCICLOS + 1`
 	logging.sh listener "Nro de Ciclo: $CANTCICLOS"
@@ -190,3 +194,4 @@ while [[ 1 ]]; do
 	disparar_proceso "$ACEPDIR" rating masterlist
 	sleep 30
 done
+exit 0

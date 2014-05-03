@@ -67,8 +67,31 @@ function showHelp() {
 }
 
 function chequearFuentes() {
-	echo "Chequeando fuentes... HECHO"
+	local FALTANTES
+
+	echo -n "Chequeando Fuentes . . . . "
+	#$LOG 'Instalar_TP' 'Comprobando Fuentes de Instalación'
+	# Busco directorios faltantes
+	# Me fijo si existen los directorios conf y src y el script para loggear
+
+	if [ -d "$SRCDIR" ]; then
+        	# Busco scripts faltantes
+       	        for i in "${SCRIPTS[@]}"; do
+	       	        [ -e "${SRCDIR}${i}" ] || FALTANTES=("${FALTANTES[@]}" "$i")
+       		done
+	else
+        	[ -d "$SRCDIR" ] || FALTANTES=("${FALTANTES[@]}" "$SRCDIR")
+	fi
+	# Informo los resultados
+	local MSG="\n\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}\nInstalación 		Cancelada."
+	#[ ${#FALTANTES[@]} -gt 0 ] && error_exit $ERRNO4 "$MSG"
+	[ ${#FALTANTES[@]} -gt 0 ] && echo -e "$MSG"
+	#$LOG 'Instalar_TP' 'Paquete de instalación completo'
+	# Si no está el confdir, lo creo
+	[ -d $CONFDIR ] || mkdir $CONFDIR
+	echo "HECHO"
 }
+
 
 function iniciarLog() {
 	#copio script logging
@@ -291,6 +314,7 @@ function startInstall() {
 
 # Configuro el script de log para poder usarlo en la instalación
 if [ $# -eq 0 ]; then
+	chequearFuentes	
 	startInstall
 	echo 'instalacion completa'
 

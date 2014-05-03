@@ -12,9 +12,9 @@ CONFDIR="${BASE}/conf"
 
 SRCDIR="${BASE}/src/"
 
-LOG_INSTALACION="${CONFDIR}/Instalar_TP.log"
+LOG_INSTALACION="${CONFDIR}/Installer.log"
 
-CONF_INSTALACION="${CONFDIR}/Instalar_TP.conf"
+CONF_INSTALACION="${CONFDIR}/Installer.conf"
 
 SCRIPTS=('Initializer' 'Listener' 'Masterlist' 'Rating' 'Reporting' 'Mover' 'Start' 'Stop' 'Log')
 
@@ -32,7 +32,7 @@ LOGSIZE=400
 DEF_REPODIR=listados
 DEF_PROCDIR=procesados
 
-DIRECTORIOS=( "$DEF_BINDIR" "$DEF_MAEDIR" "$DEF_ARRIDIR" "$DEF_DATASIZE" "$DEF_ACEPDIR" "$DEF_RECHDIR" "$DEF_REPODIR" "$DEF_PROCDIR" "$DEF_LOGDIR" "$DEF_LOGEXT" "$DEF_LOGSIZE" )
+DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$DATASIZE" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
 MENSAJE1="Defina el directorio de instalación de los ejecutables"
 MENSAJE2="Defina directorio para maestros y tablas"
@@ -66,9 +66,16 @@ function showHelp() {
         echo "-h                                Muestra esta ayuda"
 }
 
+function chequearFuentes() {
+	echo "Chequeando fuentes... HECHO"
+}
 
 function iniciarLog() {
-	echo "Inicio de Ejecución de Installer"
+	#copio script logging
+        #cp "${SRCDIR}${ARCHIVOLOG}" "$BASE"
+        #chmod u+x "${SRCDIR}${ARCHIVOLOG}"
+
+	echo "Inicializar log"
 }
 
 function ubicarLog() {
@@ -111,32 +118,33 @@ function terminosYcondiciones() {
 
 function comprobarPerl() {
         local PERL_VER_ACT=$(perl -v | grep 'v[0-9][0-9]*' | cut -d. -f1 | sed 's/\(.*\)\(v\)\([0-9]*\)$/\3/')
-        if [ $PERL_VER_ACT -lt $PERL_VER_REQ ] ;then
-                error_exit $ERRNO1 "$MSG_ERROR_PERL"
+        if [ $PERL_VER_ACT -lt $PERL_VER_REQ ];then
+		echo "error perl"
+                #error_exit $ERRNO1 "$MSG_ERROR_PERL"
         fi
         echo -e "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
         #$LOG "Instalar_TP" "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
 }
 
 function definirDirectorios() {
-local val_ingresado ret_val instalar=0
-while [ $instalar -eq 0 ]; do
+local directorio retorno instalado=0
+while [ $instalado -eq 0 ]; do
         for (( i = 0; i < ${#MENSAJES[@]}; ++i )); do
                 while : ; do
                         # Le pido al usuario que ingrese un valor
                         echo -n "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "
-                        read val_ingresado
+                        read directorio
                         # Falta validar
                         #${ARREGLO_FUNCIONES[$i]} "$val_ingresado" "${ARREGLO_ARGS[$i]}"
-                        #ret_val=$?
+                        retorno=$?
                         #if [ "$ret_val" -eq 1 ]; then
                         #        echo "$val_ingresado" | grep '^/' > /dev/null
                         #        [ $? -eq 0 ] && val_ingresado=${val_ingresado#*/}
                         #        echo "$val_ingresado" | grep '/$' > /dev/null
                         #        [ $? -eq 0 ] && val_ingresado=${val_ingresado%/*}
-                        #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): $val_ingresado"
-			if [ "$ret_val" -eq 1 ]; then
-	                        DIRECTORIOS[$i]="$val_ingresado"
+                        #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): 				#$val_ingresado"
+			if [ "$retorno" -eq 1 ]; then
+	                        DIRECTORIOS[$i]="$directorio"
 	                        break
                         # Si el valor igresado es inválido
                         #elif [ $ret_val -eq 2 ]; then
@@ -147,21 +155,21 @@ while [ $instalar -eq 0 ]; do
                         # Si no ingresó nada
                         #else
 			else
-				echo "instalando $DIRECTORIOS[$i]"
+				echo "Directorio de ${DIRECTORIOS[$i]}: ${DIRECTORIOS[$i]}"
                         #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): ${ARREGLO_VALORES[$i]}"
                                 break
                         fi
                 done
         done
         # Muestro el estado de la instalación y lo loggeo
-        clear
+        #clear
         #echo "$ESTADO_INST"
         #$LOG "Instalar_TP" "$ESTADO_INST"
         echo -e "\nEstá de acuerdo con la configuración de instalación? (Si - No): "
         #$LOG "Instalar_TP" "Está de acuerdo con la configuración de instalación? (Si - No): "
         read OPCION
         OPCION=$(echo "$OPCION" | tr [:upper:] [:lower:])
-        [ "$OPCION" = 'si' -o "$OPCION" = 's' -o "$OPCION" = '' ] && instalar=1
+        [ "$OPCION" = 'si' -o "$OPCION" = 's' -o "$OPCION" = '' ] && instalado=1
 	if [ "$OPCION" == '' ]; then
 	      $LOG "Instalar_TP" "Si"
 	else
@@ -180,6 +188,7 @@ function CrearJerarquia() {
                 CURR_DIR+="$word/"
                 if [ ! -d "$CURR_DIR" ]; then
                         mkdir "$CURR_DIR"
+			echo "$1"
                 fi
         done
         IFS=$TMP
@@ -192,8 +201,9 @@ echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
 #ValidarDecisionUsuario
 
 # Creo la estructura de directorios
-echo -n "Creando Estructuras de Directorios. . . . "
-DIRECTORIOS=("$BINDIR" "$MAEDIR" "$ARRIDIR" "$ACEPDIR" "$RECHDIR" "$REPODIR" "$PROCDIR" "$LOGDIR")
+echo "Creando Estructuras de Directorios. . . . "
+DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" )
+
 for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
         CrearJerarquia "${DIRECTORIOS[$i]}"
 done
@@ -250,6 +260,8 @@ function etapas() {
 }
 
 function startInstall() {
+	echo "Inicio de Ejecución del Installer"
+
 	iniciarLog
 	etapas
 

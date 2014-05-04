@@ -1,9 +1,0 @@
-Función Start para RETAILC
-La función comienza procesos procesos o en foreground o en background
-Para utilizarla deben estar inicializadas las variables de ambiente ( y por ende ENVINIT=1).
-La función recibe como mínimo 3 parámetros:
-$1: Proceso caller (nombre del comando que esta utilizando el Start, sin el .sh). Si se le pasa NULL, no graba un archivo de log, en caso de ser un comando que no usa archivos de log.
-$2: Tipo de ejecución (-f: foreground, -b: background) ambos en el contexto de quien lo ejecuta.
-$3: Nombre del comando (sin .sh).
-$N: Parametros para pasar al comando a ejecutar.
-Donde $N es la cantidad de parámetros que necesita la función a ejecutar (si no recibe parámetros no se le pasa nada).

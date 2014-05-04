@@ -3,27 +3,27 @@
 function validarRegistroCabecera
 {	
 	if [[ "$2" == "-1" ]]; then # Verifico si existe el Supermercado
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Supermercado inexistente" "ERR";
+		bash logging.sh "Masterlist" "Se rechaza el archivo por Supermercado inexistente" "WAR";
 		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
 	fi
 
 	if [[ $3 -eq -1 ]]; then # Verifico cantidad de campos
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Cantidad de campos invalida" "ERR";
+		bash logging.sh "Masterlist" "Se rechaza el archivo por Cantidad de campos invalida" "WAR";
 		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
 	else
 		if [[ $4 -eq -1 || $4 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion producto
-			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion producto invalida" "ERR";
+			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion producto invalida" "WAR";
 			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 			bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 			return 2;
 		fi 					
 		
 		if [[ $5 -eq -1 || $5 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion precio
-			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion precio invalida" "ERR";
+			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion precio invalida" "WAR";
 			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 			bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 			return 2;
@@ -31,7 +31,7 @@ function validarRegistroCabecera
 	fi
 
 	if [[ "$6" == "-1" ]]; then # Verifico correo electronico
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "ERR";
+		bash logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "WAR";
 		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
 		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
@@ -110,6 +110,11 @@ superMae="$GRUPO/$MAEDIR/super.mae"
 asociadosMae="$GRUPO/$MAEDIR/asociados.mae"
 preciosMae="$GRUPO/$MAEDIR/precios.mae"
 
+if [[ $ENVINIT -eq 0 ]]; then
+	bash logging.sh "Masterlist" "Se finaliza el script por no estar seteado el ambiente" "ERR";
+	exit -1;
+fi
+
 #Inicio del archivo de Log
 bash logging.sh "Masterlist" "Inicio de Masterlist"
 cantidadArchivos=`ls $pathPrecios | wc -l`
@@ -162,7 +167,7 @@ else
 		fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
 
 		if [[ "$fechaArchivo" == "-1" ]]; then # Archivo de lista de precios con fecha invalida, se rechaza.
-			bash logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "ERR";
+			bash logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "WAR";
 			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
 			bash Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 			continue;
@@ -184,7 +189,7 @@ else
 					bash Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";			
 				else 
 					# La fecha del registro encontrado en precios.mae es mayor a la fecha del archido a procesar
-					bash logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "ERR";
+					bash logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "WAR";
 					bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
 					bash Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 				fi

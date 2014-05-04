@@ -32,8 +32,6 @@ RECHDIR=rechazados
 LOGDIR=log
 LOGEXT=log
 LOGSIZE=400
-DEF_REPODIR=listados
-DEF_PROCDIR=procesados
 
 DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$DATASIZE" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
@@ -241,7 +239,11 @@ echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
 
 # Creo la estructura de directorios
 echo "Creando Estructuras de Directorios. . . . "
-DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" )
+MAEDIR2="$MAEDIR/precios/proc"
+ACEPDIR2="$ACEPDIR/proc"
+INFODIR2="$INFODIR/pres"
+
+DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$MAEDIR2" "$ACEPDIR2" "$INFODIR2")
 
 for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
         CrearJerarquia "${DIRECTORIOS[$i]}"

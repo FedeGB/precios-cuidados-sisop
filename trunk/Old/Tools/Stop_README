@@ -1,0 +1,7 @@
+Función Stop para RETAILC
+Esta función detiene procesos que se le pasan por parámetro.
+Recibe como mínimo 1 parámetro que es el proceso a detener.
+El 2do parámetro que se le puede pasar es el nombre de la función que invoca a Stop.
+Esto solo es necesario si la función invocadora utiliza archivos de log.
+$1: Comando a detener (sin el .sh)
+$2: Comando invocador (opcional)

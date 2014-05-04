@@ -33,29 +33,39 @@ REINSTALL="Por favor, vuelva a instalar el programa nuevamente.
 Para ello inicie el instalador y siga los pasos correctamente.
 Si el problema sigue persistiendo, intente reinciando el sistema."
 
+ERROR=0
+
 ### Paths base
 
 ACTUAL="`cd "$(dirname "${BASH_SOURCE[0]}")" && pwd`"
 PATHGROUP=`echo "$ACTUAL" | sed "s-\(.*\)/grupo03/.*-\1/grupo03-"`
 PATHCONF="$PATHGROUP/conf"
-echo $PATHCONF
-if ! [ -d $PATHCONF ]
-then
-	echo "No se encuentra directorio grupo03/conf.
-	No se puede inicializar RETAILC."
-	exit -2
-fi
 
-if ! [ -f "$PATHCONF/Installer.conf" ]
-then
-	echo "No se encuentra el archivo de configuración.
-	No se puede inicializar RETAILC."
-	exit -2
-else
-	chmod 444 "$PATHCONF/Installer.conf"
-fi
+function VerificarPathInicial
+{
+	if ! [ -d $PATHCONF ]
+	then
+		echo "No se encuentra directorio grupo03/conf.
+		No se puede inicializar RETAILC."
+		return 2
+	fi
 
-export GRUPO=`echo \`grep '^GRUPO' "$PATHCONF"/Installer.conf\` | cut -f2 -d'='`
+	if ! [ -f "$PATHCONF/Installer.conf" ]
+	then
+		echo "No se encuentra el archivo de configuración.
+		No se puede inicializar RETAILC."
+		return 2
+	else
+		chmod 444 "$PATHCONF/Installer.conf"
+	fi
+
+	export GRUPO=`echo \`grep '^GRUPO' "$PATHCONF"/Installer.conf\` | cut -f2 -d'='`
+	return 0
+}
+
+VerificarPathInicial
+ERROR=$?
+
 ### Permisos de archivos
 
 # 666 rw-rw-rw
@@ -94,7 +104,7 @@ function cargarVariablesConf
 {
 	for i in "${VARARCHCONF[@]}"
 	do
-		export eval "$i"=$(echo `grep "^$i" $PATHCONF/Installer.conf` | cut -f2 -d'=')
+		eval "$i"=$(echo `grep "^$i" $PATHCONF/Installer.conf` | cut -f2 -d'=')
 		if [ -z "${!i}" ]
 		then
 			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta la variable $i en el archivo de configuración" "ERR"
@@ -116,14 +126,14 @@ function verficarDirectorios
 				echo "Faltan directorios que contienen archivos imporatntes.
 				$REINSTALL"
 				$GRUPO/$BINDIR/logging.sh "Initializer" "Falta un directorio que contiene archivos importantes"
-				exit -2
+				return 2
 			fi
 			mkdir $GRUPO/${!d}
 			$GRUPO/$BINDIR/logging.sh "Initializer" "Falta el directorio ${!d}. Se creo para continuar funcionamiento" "WAR"
 		fi
 	done
 
-	return 1
+	return 0
 }
 
 function verificarEx
@@ -180,10 +190,24 @@ function verificarArchivos
 	then
 		echo "El ambiente ya está inicializado, si quiere reiniciar termine su sesión e ingrese nuevamente"
 		$GRUPO/$BINDIR/logging.sh "Initializer" "Ambiente ya fue inicializado" "ERR"
-		exit -1
-	else
-		export ENVINIT=1 # Marco que está inicializado el ambiente
+		return 1
 	fi
+	return 0
+ }
+
+ function setearAmbiente
+ {
+ 	for i in "${VARARCHCONF[@]}"
+	do
+		export "$i"
+		if [ -z "${!i}" ]
+		then
+			$GRUPO/$BINDIR/logging.sh "Initializer" "No se pudo setear la variable $i en el ambiente" "ERR"
+			return 1
+		fi
+	done
+	export ENVINIT=1
+	return 0
  }
 
  function iniciarDaemon
@@ -246,64 +270,107 @@ function verificarArchivos
  	return 0
  }
 
-
 ### Comienzo script
 
-if [ $# -eq "1" ]
+if [[ $ERROR -eq 0 ]]
 then
-	if [ $1 == "-f" ]
+	if [ $# -eq "1" ]
 	then
-		unset ENVINIT
-		exit 0
+		if [ $1 == "-f" ]
+		then
+			unset ENVINIT
+		fi
 	fi
 fi
 
-iniciarLog
+if [[ $ERROR -eq 0 ]]
+then
+	iniciarLog
+fi
+
 if [ $? -eq 1 ]
 then
 	echo "Faltan archivos o variables para el correcto funcionamiento del programa.
 $REINSTALL"
-exit -2
+ERROR=2
 fi
 
-cargarVariablesConf 
+if [[ $ERROR -eq 0 ]]
+then
+	cargarVariablesConf 
+fi
+
 if [ $? -eq 1 ]
 then
 	echo "Faltan variables en el archivo de configuración.
 $REINSTALL"
-exit -2
+	ERROR=2
 fi
-$GRUPO/$BINDIR/logging.sh "Initializer" "Se cargó satisfactoriamente el archivo de configuración" 
 
-verficarDirectorios
-$GRUPO/$BINDIR/logging.sh "Initializer" "Se completó verificación de directorios"
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "Se cargó satisfactoriamente el archivo de configuración"
+	verficarDirectorios
+	ERROR=$?
+fi
 
-verificarEx
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "Se completó verificación de directorios"
+	verificarEx
+fi
+
 if [ $? -eq 1 ]
 then
 	echo "Faltan ejecutales para la correcta ejecución del programa.
 $REINSTALL"
-exit -2
+	ERROR=2
 fi
-$GRUPO/$BINDIR/logging.sh "Initializer" "Se identificaron todos los ejecutables necesarios"
 
-verificarArchivos
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "Se identificaron todos los ejecutables necesarios"
+	verificarArchivos
+	ERROR=$?
+fi
+
 if [ $? -eq 1 ]
 then
 	echo "Faltan archivos maestros y/o tablas del sistema.
 $REINSTALL"
-exit -2
+	ERROR=2	
 fi
-$GRUPO/$BINDIR/logging.sh "Initializer" "Se encontraron los archivos maestros y tablas del sistema"
 
-verificarAmbiente
-$GRUPO/$BINDIR/logging.sh "Initializer" "Se incializo correctamente el ambiente"
- 
-# Seteo variable PATH para los ejecutables
-export PATH=$PATH:"$GRUPO/$BINDIR"
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "Se encontraron los archivos maestros y tablas del sistema"
+	verificarAmbiente
+	ERROR=$?
+fi
 
-iniciarDaemon
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "El ambiente no se encontraba inicializado"
+	setearAmbiente
+	ERROR=$?
+fi
 
-estadoFinal
+if [[ $ERROR -eq 0 ]]
+then
+	$GRUPO/$BINDIR/logging.sh "Initializer" "Se incializo correctamente el ambiente"
+	# Seteo variable PATH para los ejecutables
+	export PATH=$PATH:"$GRUPO/$BINDIR"
+fi
 
-exit 0
+if [[ $ERROR -eq 0 ]]
+then
+	iniciarDaemon
+	ERROR=$?
+fi
+
+if [[ $ERROR -eq 0 ]]
+then
+	estadoFinal
+fi
+
+return $ERROR

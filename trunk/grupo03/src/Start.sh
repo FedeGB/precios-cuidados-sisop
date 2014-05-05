@@ -40,7 +40,7 @@ then
 	bash logging.sh "$CALL" "El proceso $PRO ya está corriendo" "WAR"
 	fi
 	echo "El proceso $PRO ya está corriendo"
-	exit 0
+	exit 1
 fi
 
 if [ $# -eq 3 ]

@@ -2,7 +2,6 @@
 
 #Variables:
 CANTCICLOS=0
-
 #Valida que un usuario sea asociado
 #Parámetros:
 #$1 -> Nombre de usuario
@@ -37,14 +36,12 @@ function es_lista_compras
 	declare local usuario=`echo "$1" | grep "^[^\.]*\.[^- ]\{3\}$" | sed 's~^\([^\.]*\)\.[^- ]\{3\}$~\1~'`
 	if [[ "$usuario" == "" ]]; then
 		prob="Formato invalido"
-		echo $prob
 		return 0
 	else
 		usuario_es_asociado "$usuario"
 		res=$?
 		if [[ $res -ne 0 ]]; then
 			prob="Asociado inexistente"
-			echo $prob
 			return 0
 		fi	
 	fi
@@ -104,7 +101,8 @@ function es_lista_precios
 	declare local fecha=`echo "$validationData" | sed "s~^\([0-9]\{8\}\)-.*$~\1~"`
 	validar_fecha $fecha
 	if [[ $? == 0 ]]; then
-		prob="Fecha invalida"
+		#eval "$2"="Fecha invalida"
+		prob="Fecha invalida"		
 		return 0
 	fi
 	declare local colaborador=`echo "$validationData" | sed 's~^[0-9]\{8\}-\(.*\)$~\1~'`
@@ -126,12 +124,13 @@ function disparar_proceso
 	declare local procName=`echo "$2" | tr [:lower:] [:upper:]`
 	if [[ `find "$1" -maxdepth 1 -type f | wc -l` -ne 0  ]]; then
 		#Si se está ejecutando $2 o $3 entonces pospongo la ejecución.
-		if [[ ! -z `pgrep "^$2"` || ! -z `pgrep "^$3"` ]]; then
+		if [[ ! -z `pgrep "$2"` || ! -z `pgrep "$3"` ]]; then
 			bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 		else
-			bash Start.sh listener -f "$2"
-			declare local pid=`pgrep "^$2"`
-			if [[ -z $pid ]]; then
+			"$2.sh" &
+			res=$?
+			declare local pid=$(pgrep "$2")
+			if [[ $res -ne 0 ]]; then
 				bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 			else
 				bash logging.sh listener "$procName corriendo bajo el no.: $pid"
@@ -161,11 +160,14 @@ while [[ 1 ]]; do
 			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
-		if [[ `es_lista_compras "$arch"; echo $?` -eq 1 ]]; then
+		es_lista_compras "$arch"
+		declare local res=$?
+		if [[ $res -eq 1 ]]; then
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/" listener
 		else
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-			bash logging.sh listener "Archivo rechazado: $prob"
+			echo $prob
+			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
 	#Archivos con pinta de lista de precios
@@ -177,11 +179,13 @@ while [[ 1 ]]; do
 			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
-		if [[ `es_lista_precios "$arch"; echo $?` -eq 1 ]]; then
+		es_lista_precios "$arch"
+		declare local res=$?
+		if [[ $res -eq 1 ]]; then
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/" listener
 		else
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-			bash logging.sh listener "Archivo rechazado: $prob"
+			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
 	#Rechazar archivos que no tengan pinta de nada
@@ -194,6 +198,7 @@ while [[ 1 ]]; do
 	disparar_proceso ""$GRUPO"/"$MAEDIR"/precios/" masterlist rating
 	#Ver si hay que llamar a rating	
 	disparar_proceso ""$GRUPO"/"$ACEPDIR"/" rating masterlist
+	#Dormir
 	sleep 30
 done
 exit 0

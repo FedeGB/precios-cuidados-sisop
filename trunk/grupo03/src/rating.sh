@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-ERROR=0
-##ACEPDIR=/home/ubuntu/precios-cuidados-sisop/Rating/aceptados/
-#PROCDIR=/home/ubuntu/precios-cuidados-sisop/Rating/procesados/
-#RECHDIR=/home/ubuntu/precios-cuidados-sisop/Rating/rechazados/
-#INFODIR=/home/ubuntu/precios-cuidados-sisop/Rating/
 TABLA="$GRUPO/$MAEDIR/um.tab"
 PROCDIR="$ACEPDIR/proc"
 if [[ ! -f "$GRUPO/$MAEDIR/precios.mae" ]]; then
@@ -12,9 +6,6 @@ if [[ ! -f "$GRUPO/$MAEDIR/precios.mae" ]]; then
 	exit -1
 fi
 MAESTRO="$GRUPO/$MAEDIR/precios.mae"
-#export LOGDIR="/home/ubuntu/precios-cuidados-sisop/Rating/"
-#export LOGEXT="log"
-#export LOGSIZE="400"
 
 <<CheckFile 
 	Checks that a file is not empty nor already processed. Returns zero if OK.
@@ -52,7 +43,7 @@ function sameUnit() {
 }
 
 <<getDescription
-	Returns the product's description of a "lista de compras" record.
+	Returns the product description of a "lista de compras" record.
 	$1: "lista de compras" record.
 getDescription
 

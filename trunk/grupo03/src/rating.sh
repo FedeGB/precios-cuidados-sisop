@@ -1,4 +1,4 @@
-#comentario
+#!/bin/bash
 #
 ERROR=0
 ##ACEPDIR=/home/ubuntu/precios-cuidados-sisop/Rating/aceptados/
@@ -213,14 +213,19 @@ function validRecord() {
 	return
 }
 
+if [[ $ENVINIT -eq 0 ]]; then
+	bash logging.sh "Rating" "Se finaliza el script por no estar seteado el ambiente." "ERR";
+	exit -1;
+fi
+
 $LOGGER "Rating" "Inicio de Rating"
 oldIFS=$IFS
 IFS=$'\n'
 let cant=0
-cantListas=$(ls $GRUPO/$ACEPDIR/ | wc -l)
+cantListas=$(ls -F $GRUPO/$ACEPDIR/ | grep -v \/ | wc -l)
 $LOGGER "Rating" "Cantidad de listas de compras a procesar: $cantListas "
 echo "Rating - Rating iniciado."
-for file in $(ls $GRUPO/$ACEPDIR/); do
+for file in $(ls -F $GRUPO/$ACEPDIR/ | grep -v \/); do
 	let cant=cant+1
 	$LOGGER "Rating" "Archivo a procesar: $file"
 	fileOK=$(checkFile $file)
@@ -242,4 +247,5 @@ for file in $(ls $GRUPO/$ACEPDIR/); do
 done
 IFS=$oldIFS
 $LOGGER "Rating" "Fin de Rating."
-echo "Rating - Fin de Rating"
+echo "Rating - Fin de Rating."
+exit 0

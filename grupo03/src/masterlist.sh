@@ -3,37 +3,37 @@
 function validarRegistroCabecera
 {	
 	if [[ "$2" == "-1" ]]; then # Verifico si existe el Supermercado
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Supermercado inexistente" "WAR";
-		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
-		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
+		logging.sh "Masterlist" "Se rechaza el archivo por Supermercado inexistente" "WAR";
+		logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
+		Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
 	fi
 
 	if [[ $3 -eq -1 ]]; then # Verifico cantidad de campos
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Cantidad de campos invalida" "WAR";
-		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
-		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
+		logging.sh "Masterlist" "Se rechaza el archivo por Cantidad de campos invalida" "WAR";
+		logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
+		Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
 	else
 		if [[ $4 -eq -1 || $4 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion producto
-			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion producto invalida" "WAR";
-			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
-			bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
+			logging.sh "Masterlist" "Se rechaza el archivo por Posicion producto invalida" "WAR";
+			logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
+			Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 			return 2;
 		fi 					
 		
 		if [[ $5 -eq -1 || $5 -gt $3 || $4 -eq $5 ]]; then # Verifico posicion precio
-			bash logging.sh "Masterlist" "Se rechaza el archivo por Posicion precio invalida" "WAR";
-			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
-			bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
+			logging.sh "Masterlist" "Se rechaza el archivo por Posicion precio invalida" "WAR";
+			logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
+			Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 			return 2;
 		fi
 	fi
 
 	if [[ "$6" == "-1" ]]; then # Verifico correo electronico
-		bash logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "WAR";
-		bash logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
-		bash Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
+		logging.sh "Masterlist" "Se rechaza el archivo por Correo electronico del colaborador invalido" "WAR";
+		logging.sh "Masterlist" "Moviendo $pathPrecios/$1 a $GRUPO/$RECHDIR/$1";
+		Mover.sh "$pathPrecios/$1" "$GRUPO/$RECHDIR/$1" "Masterlist";
 		return 2;
 	fi
 
@@ -98,9 +98,9 @@ function procesarArchivo
 			echo "$3;$4;$5;$producto;$precio" >> $2;
 		fi
 	done
-	bash logging.sh "Masterlist" "Archivo $1 ha sido procesado" "INF";
-	bash logging.sh "Masterlist" "Registros ok: $cantidadRegistrosOk" "INF";
-	bash logging.sh "Masterlist" "Registros nok: $cantidadRegistrosNok" "INF";
+	logging.sh "Masterlist" "Archivo $1 ha sido procesado" "INF";
+	logging.sh "Masterlist" "Registros ok: $cantidadRegistrosOk" "INF";
+	logging.sh "Masterlist" "Registros nok: $cantidadRegistrosNok" "INF";
 }
 
 # Variables
@@ -111,15 +111,15 @@ asociadosMae="$GRUPO/$MAEDIR/asociados.mae"
 preciosMae="$GRUPO/$MAEDIR/precios.mae"
 
 if [[ $ENVINIT -eq 0 ]]; then
-	bash logging.sh "Masterlist" "Se finaliza el script por no estar seteado el ambiente" "ERR";
+	logging.sh "Masterlist" "Se finaliza el script por no estar seteado el ambiente" "ERR";
 	exit -1;
 fi
 
 #Inicio del archivo de Log
-bash logging.sh "Masterlist" "Inicio de Masterlist"
+logging.sh "Masterlist" "Inicio de Masterlist"
 cantidadArchivos=`ls $pathPrecios | wc -l`
 cantidadArchivos=`expr $cantidadArchivos - 1` #Resto uno por la carpeta proc
-bash logging.sh "Masterlist" "Cantidad de Listas de precios a procesar: $cantidadArchivos"
+logging.sh "Masterlist" "Cantidad de Listas de precios a procesar: $cantidadArchivos"
 #Fin cabecera de log
 
 IFS=$'\n' # Modifico Internal Field Separator
@@ -132,11 +132,11 @@ else
 		if [ -d $pathPrecios/$archivoPrecios ]; then
 			continue;
 		fi
-		bash logging.sh "Masterlist" "Archivo a procesar: $archivoPrecios"
+		logging.sh "Masterlist" "Archivo a procesar: $archivoPrecios"
 		if [ -e $pathProcesados/$archivoPrecios ]; then #Archivo ya procesado
-			bash logging.sh "Masterlist" "Se rechaza el archivo por estar DUPLICADO" "ERR";
-			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-			bash Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+			logging.sh "Masterlist" "Se rechaza el archivo por estar DUPLICADO" "WAR";
+			logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+			Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 			continue;
 		fi
 		cabecera=`sed -n '1p' "$pathPrecios/$archivoPrecios"` # Obtengo el registro de cabecera
@@ -167,9 +167,9 @@ else
 		fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
 
 		if [[ "$fechaArchivo" == "-1" ]]; then # Archivo de lista de precios con fecha invalida, se rechaza.
-			bash logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "WAR";
-			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-			bash Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+			logging.sh "Masterlist" "Se rechaza el archivo por FECHA INVALIDA" "WAR";
+			logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+			Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 			continue;
 		fi	
 
@@ -184,29 +184,29 @@ else
 					sed -i "s/^$superID;$usuario;$fechaRegistro;.*$//g" $preciosMae #Elimino los registros viejos 
 					sed -i '/^$/d' $preciosMae #Elimino las lineas en blanco producto de eliminar registros
 					procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "$posProducto";
-					bash logging.sh "Masterlist" "Registros eliminados: $cantidadRegistrosEliminados" "INF";
-					bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
-					bash Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";			
+					logging.sh "Masterlist" "Registros eliminados: $cantidadRegistrosEliminados" "INF";
+					logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
+					Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";			
 				else 
 					# La fecha del registro encontrado en precios.mae es mayor a la fecha del archido a procesar
-					bash logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "WAR";
-					bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
-					bash Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
+					logging.sh "Masterlist" "Se rechaza el archivo por fecha anterior a la existente" "WAR";
+					logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $GRUPO/$RECHDIR/$archivoPrecios";
+					Mover.sh "$pathPrecios/$archivoPrecios" "$GRUPO/$RECHDIR/$archivoPrecios" "Masterlist";
 				fi
 			else
 				procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "$posProducto";
-				bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
-				bash Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
+				logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
+				Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
 			fi
 		else 
 			procesarArchivo "$archivoPrecios" "$preciosMae" "$superID" "$usuario" "$fechaArchivo" "$posPrecio" "$posProducto";
-			bash logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
-			bash Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
+			logging.sh "Masterlist" "Moviendo $pathPrecios/$archivoPrecios a $pathProcesados/$archivoPrecios";
+			Mover.sh "$pathPrecios/$archivoPrecios" "$pathProcesados/$archivoPrecios" "Masterlist";
 		fi
 	done	
 fi
 
 #Fin del archivo de Log
-bash logging.sh "Masterlist" "Fin de Masterlist"
+logging.sh "Masterlist" "Fin de Masterlist"
 
 exit 0

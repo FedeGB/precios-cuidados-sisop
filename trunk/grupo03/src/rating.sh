@@ -229,7 +229,7 @@ for file in $(ls -F $GRUPO/$ACEPDIR/ | grep -v \/); do
 				bash logging.sh "Rating" "Ignorado registro de lista de compras del archivo $file por formato inválido." "WAR"
 			fi
 		done
-		bash logging.sh "Rating" "Generada lista de compra: $file" 
+		bash logging.sh "Rating" "Generada lista de compra $file en el directorio $GRUPO/$INFODIR/pres/" 
 		bash Mover.sh "$GRUPO/$ACEPDIR/$file" "$GRUPO/$PROCDIR/"
 	else 
 		bash logging.sh "Rating" "El archivo $file se rechaza por estar $fileOK" "WAR"

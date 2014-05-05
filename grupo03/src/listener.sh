@@ -34,15 +34,17 @@ function usuario_es_asociado
 function es_lista_compras
 {
 	prob=""
-	declare local usuario=`echo $1 | grep "^\([^\.]\)*\.[^- ]\{3\}$" | sed 's~^\([^\.]*\)\.[^- ]\{3\}$~\1~'`
+	declare local usuario=`echo "$1" | grep "^[^\.]*\.[^- ]\{3\}$" | sed 's~^\([^\.]*\)\.[^- ]\{3\}$~\1~'`
 	if [[ "$usuario" == "" ]]; then
 		prob="Formato invalido"
+		echo $prob
 		return 0
 	else
-		usuario_es_asociado $usuario
+		usuario_es_asociado "$usuario"
 		res=$?
 		if [[ $res -ne 0 ]]; then
 			prob="Asociado inexistente"
+			echo $prob
 			return 0
 		fi	
 	fi
@@ -73,7 +75,7 @@ function in_range
 #Devuelve 1 si la fecha es válida, 0 en caso contrario
 function validar_fecha
 {
-	if [[ `echo $1 | wc -m` -ne 8 ]]; then return 0; fi;
+	if [[ `echo "$1" | wc -m` -ne 9 ]]; then return 0; fi;
 	declare local compValue=`echo $1 | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
 	if [[ "$compValue" == "" ]]; then return 0; fi;
 	if [ $1 -le 20140101 ]; then return 0; fi;
@@ -98,15 +100,15 @@ function validar_fecha
 function es_lista_precios
 {
 	prob=""
-	declare local validationData=`echo $1 | grep "^[^ ]*-[0-9]\{8\}\..*$" | sed 's~^[^ ]*-\([0-9]\{8\}\)\.\(.*\)$~\1-\2~'`
-	declare local fecha=`echo $validationData | sed "s~^\([0-9]\{8\}\)-.*$~\1~"`
+	declare local validationData=`echo "$1" | grep "^[^ ]*-[0-9]\{8\}\..*$" | sed 's~^[^ ]*-\([0-9]\{8\}\)\.\(.*\)$~\1-\2~'`
+	declare local fecha=`echo "$validationData" | sed "s~^\([0-9]\{8\}\)-.*$~\1~"`
 	validar_fecha $fecha
 	if [[ $? == 0 ]]; then
 		prob="Fecha invalida"
 		return 0
 	fi
-	declare local colaborador=`echo $validationData | sed 's~^[0-9]\{8\}-\(.*\)$~\1~'`
-	usuario_es_asociado $colaborador "Y"
+	declare local colaborador=`echo "$validationData" | sed 's~^[0-9]\{8\}-\(.*\)$~\1~'`
+	usuario_es_asociado "$colaborador" "Y"
 	if [[ $? == 1 ]]; then
 		prob="Asociado inexistente"
 		return 0
@@ -121,15 +123,15 @@ function es_lista_precios
 #ni el proceso $2 ni el proceso $3
 function disparar_proceso
 {
-	declare local procName=`echo $2 | tr [:lower:] [:upper:]`
+	declare local procName=`echo "$2" | tr [:lower:] [:upper:]`
 	if [[ `find "$1" -maxdepth 1 -type f | wc -l` -ne 0  ]]; then
 		#Si se está ejecutando $2 o $3 entonces pospongo la ejecución.
 		if [[ ! -z `pgrep "^$2"` || ! -z `pgrep "^$3"` ]]; then
 			bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 		else
-			bash Start.sh listener -f $2
+			bash Start.sh listener -f "$2"
 			declare local pid=`pgrep "^$2"`
-			if [[ $pid -eq 0 ]]; then
+			if [[ -z $pid ]]; then
 				bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 			else
 				bash logging.sh listener "$procName corriendo bajo el no.: $pid"
@@ -159,7 +161,7 @@ while [[ 1 ]]; do
 			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
-		if [[ `es_lista_compras $GRUPO/$NOVEDIR/$arch ; echo $?` -eq 1 ]]; then
+		if [[ `es_lista_compras "$arch"; echo $?` -eq 1 ]]; then
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/" listener
 		else
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
@@ -175,9 +177,10 @@ while [[ 1 ]]; do
 			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
-		if [[ `es_lista_precios $GRUPO/$NOVEDIR/$arch; echo $?` -eq 1 ]]; then
+		if [[ `es_lista_precios "$arch"; echo $?` -eq 1 ]]; then
 			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/" listener
 		else
+			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
 			bash logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done

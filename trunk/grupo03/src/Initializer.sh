@@ -23,7 +23,7 @@ VARARCHCONF=("CONFDIR" "MAEDIR" "NOVEDIR" "DATASIZE" "ACEPDIR" "RECHDIR" "INFODI
 VARLOG=("BINDIR" "LOGDIR" "LOGEXT" "LOGSIZE")
 
 # Ejecutables
-VAREX=("logging.sh" "Start.sh" "Stop.sh" "Mover.sh" "listener.sh" "masterlist.sh" "rating.sh")
+VAREX=("logging.sh" "Start.sh" "Stop.sh" "Mover.sh" "listener.sh" "masterlist.sh" "rating.sh" "reporting.pl")
 
 # Directorios
 VARDIR=("BINDIR" "MAEDIR" "NOVEDIR" "ACEPDIR" "RECHDIR" "INFODIR")

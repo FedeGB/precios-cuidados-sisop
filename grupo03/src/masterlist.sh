@@ -90,6 +90,7 @@ function procesarArchivo
 		producto=`echo $producto | sed 's-^$-\-1-'` # Si el nombre es vacio lo cambio a -1
 		precio=`echo $registro | cut -d ";" -f $6 | sed 's-^.*\$\\\?\([0-9]\+[. | ,][0-9]\+\).*$-\1-'`
 		precio=`echo $precio | sed 's-^$-\-1-'` # Si no hay match lo cambio a -1
+		precio=`echo $precio | sed -r 's/[,]/\./g'` # Si el precio es de la forma nn,nn lo paso a nn.nn
 		if [[ "$precio" == "-1" || "$producto" == "-1" ]]; then
 			cantidadRegistrosNok=`expr $cantidadRegistrosNok + 1`;
 			continue;

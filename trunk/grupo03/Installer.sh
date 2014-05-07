@@ -1,26 +1,23 @@
-BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Codigos de error:
+ERROR0=0	# 0: Instalación exitosa
+ERROR1=1	# 1: Error de Perl
+ERROR2=2	# 2: Abortado por el usuario 
+ERROR3=3	# 3: Fuentes faltantes
+ERROR4=4	# 4: Dependencias faltantes
+ERROR5=5	# 5: Archivo de configuración corrupto
 
-GRUPO="."
 
+GRUPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+NUMGRUPO=03
 VERSION='v1.0'
-
 ARCHIVOLOG="logging.sh"
-
-LOG=". ${BASE}/${ARCHIVOLOG}"
-
-#CONFDIR="${BASE}/conf"
-CONFDIR="/conf"
-
-SRCDIR="${BASE}/src/"
-
-LOG_INSTALACION="${CONFDIR}/Installer"
-
-CONF_INSTALACION="${CONFDIR}/Installer.conf"
-
+LOG="./${ARCHIVOLOG}"
+CONFDIR="conf"
+SRCDIR="src"
+LOG_INSTALACION="${GRUPO}/${CONFDIR}/Installer.log"
+CONF_INSTALACION="${GRUPO}/${CONFDIR}/Installer.conf"
 PERL_VER_REQ=5
-
 SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.sh' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
-
 
 BINDIR=bin
 MAEDIR=mae
@@ -32,7 +29,6 @@ RECHDIR=rechazados
 LOGDIR=log
 LOGEXT=log
 LOGSIZE=400
-
 DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$DATASIZE" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
 MENSAJE1="Defina el directorio de instalación de los ejecutables"
@@ -45,11 +41,27 @@ MENSAJE7="Defina el directorio de grabación de Archivos rechazados"
 MENSAJE8="Defina el directorio de logs"
 MENSAJE9="Ingrese la extensión para los archivos de log"
 MENSAJE10="Defina el tamaño máximo para los archivos de log en Kbytes"
-
 MENSAJES=( "$MENSAJE1" "$MENSAJE2" "$MENSAJE3" "$MENSAJE4" "$MENSAJE5" "$MENSAJE6" "$MENSAJE7" 
 "$MENSAJE8" "$MENSAJE9" "$MENSAJE10" )
 
+HEADER1="Direct. de Configuracion: "
+HEADER2="Directorio Ejecutables: "
+HEADER3="Direct. Maestros y Tablas: "
+HEADER4="Directorio de Novedades: "
+HEADER5="Espacio mínimo libre para arribos: "
+HEADER6="Dir. Novedades aceptadas: "
+HEADER7="Dir. Informes de salida: "
+HEADER8="Dir. Archivos Rechazados: "
+HEADER9="Dir. de Logs de Comandos: "
+HEADER10="Tamaño máximo para los archivos de logs del sistema: "
+HEADER11="Estado de la instalación: "
 
+HEADERS=("$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER5" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" "$HEADER10" "$HEADER11")
+
+
+COPYRIGHT="TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright © Grupo $NUMGRUPO"
+TERM_Y_COND="$COPYRIGHT\n\n Al instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
+ERRORPERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o superior. Efectúe su instalación e inténtelo nuevamente.\n\n Proceso de Instalación Cancelado"
 
 # Muestra la version del sistema =S
 function showVersion() {
@@ -67,14 +79,34 @@ function showHelp() {
         echo "-h                                Muestra esta ayuda"
 }
 
+
+# Valida las decisiones por SI o por NO ingresadas por el usuario.
+# Si la opción ingresada es "si" en cualquiera de sus variantes o un retorno de carro la respuesta es tomada como afirmativa.
+# En cualquier otro caso s tomada como negativa.
+function respuestaSINO() {
+        local ELECCION
+        read ELECCION
+        ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
+        if [ "$ELECCION" != 'si' -a "$ELECCION" != 's' -a "$ELECCION" != '' ]; then
+                $LOG "installer" "$ELECCION"
+                exit $ERROR2
+        else
+		$LOG "installer" "$ELECCION"
+        fi
+}
+
+
 function iniciarLog() {
 	echo -n "Inicializar log. . . ."
 	#copio script logging
-        cp "${SRCDIR}${ARCHIVOLOG}" "$BASE"
-        chmod u+x "${SRCDIR}${ARCHIVOLOG}"
+        cp "${GRUPO}/${SRCDIR}/${ARCHIVOLOG}" "$GRUPO"
+        chmod u+x "${GRUPO}/${ARCHIVOLOG}"
 	[ -d $lOG_INSTALACION ] || mkdir $lOG_INSTALACION
-	#$LOG "installer" "Log instalado"
-	echo "sarasa"
+	export GRUPO
+	export CONFDIR
+	export LOGSIZE
+	$LOG "installer" "Inicio de Ejecución del Installer"
+	echo "HECHO"
 }
 
 
@@ -86,21 +118,22 @@ function chequearFuentes() {
 	# Busco directorios faltantes
 	# Me fijo si existen los directorios conf y src y el script para loggear
 
-	if [ -d "$SRCDIR" ]; then
+	if [ -d "${GRUPO}/$SRCDIR" ]; then
         	# Busco scripts faltantes
        	        for i in "${SCRIPTS[@]}"; do
-	       	        [ -e "${SRCDIR}${i}" ] || FALTANTES=("${FALTANTES[@]}" "$i")
+	       	        [ -e "${GRUPO}/${SRCDIR}/${i}" ] || FALTANTES=("${FALTANTES[@]}" "$i")
        		done
 	else
-        	[ -d "$SRCDIR" ] || FALTANTES=("${FALTANTES[@]}" "$SRCDIR")
+        	[ -d "${GRUPO}/$SRCDIR" ] || FALTANTES=("${FALTANTES[@]}" "${GRUPO}/$SRCDIR")
 	fi
 	# Informo los resultados
-	local MSG="\n\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}\nInstalación 		Cancelada."
-	#[ ${#FALTANTES[@]} -gt 0 ] && error_exit $ERRNO4 "$MSG"
-	[ ${#FALTANTES[@]} -gt 0 ] && echo -e "$MSG"
-	#$LOG 'Instalar_TP' 'Paquete de instalación completo'
+	if [ ${#FALTANTES[@]} -gt 0 ]; then
+		echo -e "\n\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
+		$LOG 'installer' 'Paquete de instalación incompleto'
+		exit $ERRNO4
+	fi
 	# Si no está el confdir, lo creo
-	[ -d "${BASE}/conf" ] || mkdir "${BASE}/conf"
+	[ -d "${GRUPO}/conf" ] || mkdir "${GRUPO}/conf"
 	echo "HECHO"
 }
 
@@ -108,11 +141,11 @@ function chequearFuentes() {
 
 function mostrarUbicacionLog() {
 	echo "Log de la instalación: CONFDIR/Installer.log"
-	#$LOG "installer" "Log de la instalación: CONFDIR/Installer.log"
+	$LOG "installer" "Log de la instalación: CONFDIR/Installer.log"
 }
 
 function mostrarUbicacionConf() {
-	#$LOG "installer" "Directorio predefinido de Configuración: CONFDIR"
+	$LOG "installer" "Directorio predefinido de Configuración: CONFDIR"
 	echo "Directorio predefinido de Configuración: CONFDIR"
 }
 
@@ -125,35 +158,20 @@ function chequearInstalacion() {
 }
 
 function terminosYcondiciones() {
-	#echo -e "$MSG_TERM_Y_COND"
-	#$LOG "Instalar_TP" "$MSG_TERM_Y_COND"
-	echo -e "terminos y condiciones"
-        local OPCION
-        read OPCION
-        OPCION=$(echo "$OPCION" | tr [:upper:] [:lower:])
-        if [ "$OPCION" != 'si' -a "$OPCION" != 's' -a "$OPCION" != '' ]; then
-                $LOG "Instalar_TP" "$OPCION"
-                error_exit $ERRNO2 "Abortado por el usuario"
-        else
-
-                if [ "$OPCION" = '' ]; then
-                	#$LOG "Instalar_TP" 'Si'
-			echo -e "sigue instalacion"
-                else
-			echo -e "sigue instalacion"
-                        #$LOG "Instalar_TP" "$OPCION"
-                fi
-        fi
+	echo -e "$TERM_Y_COND"
+	$LOG "installer" "$TERM_Y_COND"
+	respuestaSINO
 }
 
 function comprobarPerl() {
         local PERL_VER_ACT=$(perl -v | grep 'v[0-9][0-9]*' | cut -d. -f1 | sed 's/\(.*\)\(v\)\([0-9]*\)$/\3/')
         if [ $PERL_VER_ACT -lt $PERL_VER_REQ ];then
-		echo "error perl"
-                #error_exit $ERRNO1 "$MSG_ERROR_PERL"
+		echo $ERRORPERL
+        	$LOG "installer" $ERRORPERL
+                exit $ERROR1
         fi
         echo -e "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
-        #$LOG "Instalar_TP" "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
+        $LOG "installer" "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
 }
 
 function definirDirectorios() {
@@ -162,7 +180,7 @@ while [ $instalado -eq 0 ]; do
         for (( i = 0; i < ${#MENSAJES[@]}; ++i )); do
                 while : ; do
                         # Le pido al usuario que ingrese un valor
-                        echo -n "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "
+                        echo -n "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "
                         read directorio
                         # Falta validar
                         #${ARREGLO_FUNCIONES[$i]} "$val_ingresado" "${ARREGLO_ARGS[$i]}"
@@ -186,26 +204,37 @@ while [ $instalado -eq 0 ]; do
                         #else
 			else
 				echo "Directorio de ${DIRECTORIOS[$i]}: ${DIRECTORIOS[$i]}"
-                        #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): ${ARREGLO_VALORES[$i]}"
+                                $LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): ${DIRECTORIOS[$i]}"
                                 break
                         fi
                 done
         done
         # Muestro el estado de la instalación y lo loggeo
-        #clear
-        #echo "$ESTADO_INST"
-        #$LOG "Instalar_TP" "$ESTADO_INST"
+        clear
+        ESTADO_INST="$COPYRIGHT
+${HEADERS[0]}"$CONFDIR"
+${HEADERS[1]}"$BINDIR"
+${HEADERS[2]}"$MAEDIR"
+${HEADERS[3]}"$NOVEDIR"
+${HEADERS[4]}"$DATASIZE" Mb
+${HEADERS[5]}"$ACEPDIR"
+${HEADERS[6]}"$INFODIR"
+${HEADERS[7]}"$RECHDIR"
+${HEADERS[8]}"$LOGDIR"/<comando>."$LOGEXT"
+${HEADERS[9]}"$LOGSIZE" Kb        
+${HEADERS[10]}"LISTA""
+
+        echo "$ESTADO_INST"
+        $LOG "installer" "$ESTADO_INST"
         echo -e "\nEstá de acuerdo con la configuración de instalación? (Si - No): "
-        #$LOG "Instalar_TP" "Está de acuerdo con la configuración de instalación? (Si - No): "
+        $LOG "installer" "Está de acuerdo con la configuración de instalación? (Si - No): "
         read OPCION
         OPCION=$(echo "$OPCION" | tr [:upper:] [:lower:])
         [ "$OPCION" = 'si' -o "$OPCION" = 's' -o "$OPCION" = '' ] && instalado=1
 	if [ "$OPCION" == '' ]; then
-		echo "log"
-	      #$LOG "Instalar_TP" "Si"
+	      	$LOG "installer" "Si"
 	else
-		echo "log"
-	      #$LOG "Instalar_TP" "$OPCION"
+	      	$LOG "installer" "$OPCION"
 	fi
 done
 
@@ -228,17 +257,17 @@ function CrearJerarquia() {
 
 function GuardarDatos() {
         local REG="$1"="$2"=$(whoami)=$(date +"%d/%m/%y %r")
-        echo "$REG" >> ${BASE}/$CONF_INSTALACION
+        echo "$REG" >> $CONF_INSTALACION
 }
 
 
 function instalarDirectorios() {
 echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
-#$LOG "Instalar_TP" "Iniciando Instalación. Está Ud. seguro (Si - No): "
-#ValidarDecisionUsuario
+$LOG "installer" "Iniciando Instalación. Está Ud. seguro (Si - No): "
+respuestaSINO
 
 # Creo la estructura de directorios
-echo "Creando Estructuras de Directorios. . . . "
+echo "Creando Estructuras de Directorios"
 MAEDIR2="$MAEDIR/precios/proc"
 ACEPDIR2="$ACEPDIR/proc"
 INFODIR2="$INFODIR/pres"
@@ -248,10 +277,9 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
         CrearJerarquia "${DIRECTORIOS[$i]}"
 done
-echo HECHO
 
 # Copio los archivos necesarios para la ejecución del sistema
-echo -n "Instalando Archivos Maestros y Tablas. . . . "
+echo "Instalando Archivos Maestros y Tablas"
 local mae_files
 for file in $(ls ${SRCDIR}/*.mae); do
         cp "$file" "$MAEDIR"
@@ -259,16 +287,15 @@ for file in $(ls ${SRCDIR}/*.mae); do
         mae_files+="${file#$BASE}"'$'
 done
 
-
 local tab_files
 for file in $(ls ${SRCDIR}/*.tab); do
         cp "$file" "$MAEDIR"
         file=${file##*/}
         tab_files+="${file#$BASE}"'$'
 done
-echo "HECHO"
 
-echo -n "Instalando Programas y Funciones. . . ."
+
+echo "Instalando Programas y Funciones"
 local script_files
 for script in "${SCRIPTS[@]}"; do
         cp "${SRCDIR}/${script}" "$BINDIR"
@@ -277,16 +304,14 @@ for script in "${SCRIPTS[@]}"; do
 done
 
 
-BASE1="${BASE}/"
+BASE1="${GRUPO}/"
 
-echo -n "Actualizando la configuración del sistema . . . . "
+echo "Actualizando la configuración del sistema"
 local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR DATASIZE ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE )
-local VALORES=("$BASE" "${CONFDIR#$BASE1}" "${BINDIR#$BASE1}" "${MAEDIR#$BASE1}" "${NOVEDIR#$BASE1}" "${DATASIZE#$BASE1}" "${ACEPDIR#$BASE1}" "${INFODIR#$BASE1}" "${RECHDIR#$BASE1}"  "${LOGDIR#$BASE1}" "${LOGEXT#$BASE1}" "${LOGSIZE#$BASE1}")
-
-	[ -d $lOG_INSTALACION ] || mkdir $lOG_INSTALACION
+local VALORES=("$GRUPO" "${CONFDIR#$BASE1}" "${BINDIR#$BASE1}" "${MAEDIR#$BASE1}" "${NOVEDIR#$BASE1}" "${DATASIZE#$BASE1}" "${ACEPDIR#$BASE1}" "${INFODIR#$BASE1}" "${RECHDIR#$BASE1}"  "${LOGDIR#$BASE1}" "${LOGEXT#$BASE1}" "${LOGSIZE#$BASE1}")
 
 #creo archivo d configuracion
-[ -d $CONF_INSTALACION ] || mkdir $CONF_INSTALACION
+#[ -d "$CONF_INSTALACION" ] || mkdir $CONF_INSTALACION
 
 # Guardo las decisiones del usuario
 for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
@@ -298,7 +323,6 @@ GuardarDatos "MAEFILES" "$mae_files"
 GuardarDatos "DISFILES" "$dis_files"
 GuardarDatos "SCRIPTFILES" "$script_files"
 
-echo HECHO
 
 echo "Instalación CONCLUIDA"
 
@@ -306,34 +330,136 @@ echo "Instalación CONCLUIDA"
 
 }
 
-function etapas() {
-	local etapa
-	echo -n "etapa concluida"
-	read etapa
+function instalacionNormal() {
+	echo "Inicio de Ejecución del Installer"
+	mostrarUbicacionLog
+	mostrarUbicacionConf
+	chequearInstalacion
+	terminosYcondiciones
+	comprobarPerl
+	definirDirectorios
+	instalarDirectorios
 }
 
-function startInstall() {
-	echo "Inicio de Ejecución del Installer"
+function reinstalacion() {
+DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
-	mostrarUbicacionLog
+	$LOG 'installer' 'Comprobando Instalación existente'
+        local RESUMEN="$COPYRIGHT\n\n"
+	local EXPR DIR DIRFALTANES ARCHFALTANTES
+	local reg_name=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE)
+	local reg_value=("$GRUPO" 'conf' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.')
+	local reg_validacion=(ValidarGrupo ValidarConf ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarExtension)
+	local HEADERS2=('' "$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" )
 
+	local BASE2=${GRUPO}/
+	for (( i=0; i < ${#reg_name[@]}; ++i)); do
+		local reg=$(grep '^'"${reg_name[$i]}"'=[^=]\{1,\}='"$(whoami)=" "$CONF_INSTALACION")
+		[ -z "$reg" ] && exit $ERROR5 
+		#"Archivo de configuración corrupto. Error en el registro ${reg_name[$i]}."
+		reg=$(echo "$reg" | cut -d'=' -f2)
+		#${reg_validacion[$i]} "$reg"
+		#[ $? -eq 2 ] && exit $ERROR5 
+		#"Archivo de configuración corrupto. Error en el registro ${reg_name[$i]}."
+		[ "${reg_name[$i]}" = 'GRUPO' ] && continue
+		[ "${reg_name[$i]}" = 'LOGSIZE' ] && continue
+		if [ "${reg_name[$i]}" = 'LOGEXT' ]; then
+			RESUMEN+="$reg\n"	
+			continue		
+		fi
+		if [ "${reg_name[$i]}" = 'LOGDIR' ]; then
+			RESUMEN+="${HEADERS2[$i]}$BASE2$reg/<comando>."
+			continue
+		fi
+		if [ "${reg_name[$i]}" = 'CONFDIR' -o "${reg_name[$i]}" = 'BINDIR' -o "${reg_name[$i]}" = 'MAEDIR' ]; then
+			RESUMEN+="${HEADERS2[$i]}""$BASE2$reg\n"
+			if [ -e "$BASE2$reg" ]; then
+        			RESUMEN+='Archivos existentes:\n'$(ls "$BASE2$reg")"\n"
+		        else
+                	        DIRFALTANTES=("${DIRFALTANTES[@]}" "$BASE2$reg")
+		                #RESUMEN+="\n\n"
+                	fi	
+		elif [ "${reg_name[$i]}" = 'LOGEXT' -o "${reg_name[$i]}" = 'LOGDIR' ]; then
+			continue
+		else
+        		[ -e "$BASE2$reg" ] || DIRFALTANTES=("${DIRFALTANTES[@]}" "$BASE2$reg")
+			RESUMEN+="${HEADERS2[$i]}""$reg\n"
+			#RESUMEN+='\n\n'
+		fi
+	done
 
-	mostrarUbicacionConf
+	[ -z "$(grep "^MAEFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && exit $ERROR5
+# "Archivo de configuración corrupto. Error en la variable MAEFILES."
 
+        local TMP=$IFS
+        IFS='$'
 
-	chequearInstalacion
+        # Reviso los archivos
+        local MAEFILES=$(grep "^MAEFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
+	MAEDIR=$(grep '^MAEDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
+        for i in $(echo "$MAEFILES" | cat); do
+		[ -e "$BASE2$MAEDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$MAEDIR/$i")
+	done
+		
+	IFS=$TMP
+	[ -z "$(grep "^DISFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && error_exit $ERRNO5 "Archivo de configuración corrupto. Error en la variable DISFILES."
+	IFS='$'
+	local DISFILES=$(grep "^DISFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
+	PROCDIR=$(grep '^PROCDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
+	for i in $(echo "$DISFILES" | cat); do
+		[ -e "$BASE2$PROCDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$PROCDIR/$i")
+	done
 
-
-	terminosYcondiciones
-
-
-	comprobarPerl
-
-
-	definirDirectorios
-
-
-	instalarDirectorios
+	IFS=$TMP
+	[ -z "$(grep "^SCRIPTFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && error_exit $ERRNO5 "Archivo de configuración corrupto. Error en la variable SCRIPTFILES."
+	IFS='$'
+	local SCRIPTFILES=$(grep "^SCRIPTFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
+	BINDIR=$(grep '^BINDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
+	for i in $(echo "$SCRIPTFILES" | cat); do
+		[ -e "$BASE2$BINDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$BINDIR/$i")
+	done
+     
+	IFS=$TMP
+        # Me fijo si tengo que restaurar algo
+	if [ ${#DIRFALTANTES[@]} -eq 0 -a ${#ARCHFALTANTES[@]} -eq 0 ]; then
+		# INSTALACIÓN COMPLETA
+		RESUMEN+="\nEstado de la Instalación: COMPLETA\n\nProceso de Instalación Cancelado"
+		echo -e "$RESUMEN"
+		$LOG "installer" "$RESUMEN"
+        else
+		# REPARAR
+                RESUMEN+="\n\nComponentes faltantes:\n\nDirectorios:\n"
+                for (( i=0; i <= ${#DIRFALTANTES[@]}; ++i)); do
+			RESUMEN+="${DIRFALTANTES[$i]##*/}\n"
+                done
+                RESUMEN+="Archivos:\n"
+                for (( i=0; i <= ${#ARCHFALTANTES[@]}; ++i)); do
+			RESUMEN+="${ARCHFALTANTES[$i]##*/}\n"
+                done
+                RESUMEN+="Estado de la Instalación: INCOMPLETA\n\nDesea completar la Instalación (Si-No)"
+                echo -e "$RESUMEN"
+                $LOG "installer" "$RESUMEN"
+		respuestaSINO
+                # Instalar lo que falta
+                echo -n "Restaurando Estructuras de Directorio. . . . "
+		for DIRECTORIO in "${DIRFALTANTES[@]}"; do
+			CrearJerarquia "$DIRECTORIO"
+                done
+                echo HECHO
+                local NOMBRE DIRECCION
+                echo -n "Restaurando Archivos faltantes. . . . "
+		for ARCHIVO in "${ARCHFALTANTES[@]}"; do
+			NOMBRE=${ARCHIVO##*/}
+                        DIRECCION=${ARCHIVO%/*}
+                        cp "$SRCDIR/$NOMBRE" "$DIRECCION"
+                        for s in "${SCRIPTS[@]}"; do
+				[ "$s" = "$NOMBRE" ] && chmod u+x "$ARCHIVO"
+                        done
+		done
+                echo HECHO
+                echo "Instalación CONCLUIDA"
+	fi
+        exit $ERROR0
 
 }
 
@@ -343,9 +469,11 @@ function startInstall() {
 if [ $# -eq 0 ]; then
 	chequearFuentes	
 	iniciarLog
-	startInstall
-	echo 'instalacion completa'
-
+        if [ ! -e $CONF_INSTALACION ]; then
+        	instalacionNormal
+	else
+		reinstalacion
+	fi
 elif [ $# -eq 1 ]; then
         if [ "$1" = '-v' ]; then
                 showVersion

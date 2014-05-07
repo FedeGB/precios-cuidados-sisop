@@ -20,7 +20,7 @@ CONFDIR="conf"
 CONF_INSTALACION="${GRUPO}/${CONFDIR}/Installer.conf"
 SRCDIR="src"
 PERL_VER_REQ=5
-SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.sh' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
+SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.pl' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
 
 #Ubicaciones de directorios
 BINDIR=bin

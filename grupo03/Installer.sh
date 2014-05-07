@@ -1,10 +1,14 @@
+#!/bin/bash
+
+
+###################Variables de entorno#######################
+
 # Codigos de error:
-ERROR0=0	# 0: Instalación exitosa
-ERROR1=1	# 1: Error de Perl
-ERROR2=2	# 2: Abortado por el usuario 
-ERROR3=3	# 3: Fuentes faltantes
-ERROR4=4	# 4: Dependencias faltantes
-ERROR5=5	# 5: Archivo de configuración corrupto
+ERROR0=0	
+ERROR_DEPENDENCIAS=1
+ERROR_PERL=2	
+ERROR_USUARIO=3	
+ERROR_ARCHIVO=4	
 
 
 GRUPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -13,12 +17,12 @@ VERSION='v1.0'
 ARCHIVOLOG="logging.sh"
 LOG="./${ARCHIVOLOG}"
 CONFDIR="conf"
-SRCDIR="src"
-LOG_INSTALACION="${GRUPO}/${CONFDIR}/Installer.log"
 CONF_INSTALACION="${GRUPO}/${CONFDIR}/Installer.conf"
+SRCDIR="src"
 PERL_VER_REQ=5
 SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.sh' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
 
+#Ubicaciones de directorios
 BINDIR=bin
 MAEDIR=mae
 NOVEDIR=arribos
@@ -31,6 +35,7 @@ LOGEXT=log
 LOGSIZE=400
 DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$DATASIZE" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
+#Mensajes para que el usuario elija los directorios
 MENSAJE1="Defina el directorio de instalación de los ejecutables"
 MENSAJE2="Defina directorio para maestros y tablas"
 MENSAJE3="Defina el Directorio de arribo de novedades"
@@ -44,6 +49,7 @@ MENSAJE10="Defina el tamaño máximo para los archivos de log en Kbytes"
 MENSAJES=( "$MENSAJE1" "$MENSAJE2" "$MENSAJE3" "$MENSAJE4" "$MENSAJE5" "$MENSAJE6" "$MENSAJE7" 
 "$MENSAJE8" "$MENSAJE9" "$MENSAJE10" )
 
+#Mensajes para presentar el estado de la instalacion
 HEADER1="Direct. de Configuracion: "
 HEADER2="Directorio Ejecutables: "
 HEADER3="Direct. Maestros y Tablas: "
@@ -58,54 +64,60 @@ HEADER11="Estado de la instalación: "
 
 HEADERS=("$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER5" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" "$HEADER10" "$HEADER11")
 
-
+#Mensajes generales
 COPYRIGHT="TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright © Grupo $NUMGRUPO"
 TERM_Y_COND="$COPYRIGHT\n\n Al instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
-ERRORPERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o superior. Efectúe su instalación e inténtelo nuevamente.\n\n Proceso de Instalación Cancelado"
+MENSAJE_PERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o superior. Efectúe su instalación e inténtelo nuevamente.\n\n Proceso de Instalación Cancelado"
 
-# Muestra la version del sistema =S
+#Funciones
+
 function showVersion() {
         echo -e "Universidad de Buenos Aires - Facultad de Ingeniería\n7508 Sistemas Operativos\nTrabajo Práctico: Sarasa-$VERSION\nGrupo $NUMGRUPO\n2º cuat. 2013\nHome Page: http://code.google.com/p/ssoo22013/\n"
         echo -e "$COPYRIGHT\n"
 }
 
-# Muestra la ayuda del instalador =S 
 function showHelp() {
         echo "Ayuda Instalador de Sistema de Reserva de Entradas de Obras Teatrales-$VERSION"
         echo -e "Uso: Instalar_TP [OPCIONES]\n"
         echo "Sin opciones                      Instala o repara el sistema normalmente"
-        echo "-u                                Desinstala el sistema"
         echo "-v                                Muestra la version del sistema"
         echo "-h                                Muestra esta ayuda"
 }
 
 
-# Valida las decisiones por SI o por NO ingresadas por el usuario.
-# Si la opción ingresada es "si" en cualquiera de sus variantes o un retorno de carro la respuesta es tomada como afirmativa.
-# En cualquier otro caso s tomada como negativa.
+#Sale del script con el codigo pasado en el primer parametro y un mensaje en el segundo
+#Se encarga de borrar el archivo de log
+function salir() {
+	echo -e "$2"
+	$LOG "installer" "$2"
+	$LOG "installer" "Proceso de instalación finalizado"
+	[ -e ${BASE}/${ARCHIVOLOG} ] && rm ${BASE}/${ARCHIVOLOG}
+	exit $1
+}
+
+
+#Procesa la respuesta del usuario en caso de si y sus variantes sigue, sino termina
 function respuestaSINO() {
         local ELECCION
         read ELECCION
         ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
         if [ "$ELECCION" != 'si' -a "$ELECCION" != 's' -a "$ELECCION" != '' ]; then
                 $LOG "installer" "$ELECCION"
-                exit $ERROR2
+                SALIR $ERROR_USUARIO
         else
 		$LOG "installer" "$ELECCION"
         fi
 }
 
 
+#Hace una copia del archivo de log al path actual para utilizarlo
 function iniciarLog() {
 	echo -n "Inicializar log. . . ."
-	#copio script logging
         cp "${GRUPO}/${SRCDIR}/${ARCHIVOLOG}" "$GRUPO"
         chmod u+x "${GRUPO}/${ARCHIVOLOG}"
-	[ -d $lOG_INSTALACION ] || mkdir $lOG_INSTALACION
 	export GRUPO
 	export CONFDIR
 	export LOGSIZE
-	$LOG "installer" "Inicio de Ejecución del Installer"
 	echo "HECHO"
 }
 
@@ -114,47 +126,23 @@ function chequearFuentes() {
 	local FALTANTES
 	
 	echo -n "Chequeando Fuentes . . . . "
-	#$LOG 'Instalar_TP' 'Comprobando Fuentes de Instalación'
-	# Busco directorios faltantes
-	# Me fijo si existen los directorios conf y src y el script para loggear
 
 	if [ -d "${GRUPO}/$SRCDIR" ]; then
-        	# Busco scripts faltantes
        	        for i in "${SCRIPTS[@]}"; do
 	       	        [ -e "${GRUPO}/${SRCDIR}/${i}" ] || FALTANTES=("${FALTANTES[@]}" "$i")
        		done
 	else
         	[ -d "${GRUPO}/$SRCDIR" ] || FALTANTES=("${FALTANTES[@]}" "${GRUPO}/$SRCDIR")
 	fi
-	# Informo los resultados
+
 	if [ ${#FALTANTES[@]} -gt 0 ]; then
-		echo -e "\n\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
-		$LOG 'installer' 'Paquete de instalación incompleto'
-		exit $ERRNO4
+		echo -e "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
+		$LOG "installer" "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
+		exit $ERROR_DEPENDENCIAS
 	fi
-	# Si no está el confdir, lo creo
+
 	[ -d "${GRUPO}/conf" ] || mkdir "${GRUPO}/conf"
 	echo "HECHO"
-}
-
-
-
-function mostrarUbicacionLog() {
-	echo "Log de la instalación: CONFDIR/Installer.log"
-	$LOG "installer" "Log de la instalación: CONFDIR/Installer.log"
-}
-
-function mostrarUbicacionConf() {
-	$LOG "installer" "Directorio predefinido de Configuración: CONFDIR"
-	echo "Directorio predefinido de Configuración: CONFDIR"
-}
-
-function chequearInstalacion() {
-        if [ ! -e $CONF_INSTALACION ]; then
-		echo "Instalacion normal"
-	else
-		echo "Reinstalacion"
-	fi
 }
 
 function terminosYcondiciones() {
@@ -163,16 +151,29 @@ function terminosYcondiciones() {
 	respuestaSINO
 }
 
-function comprobarPerl() {
+function chequearPerl() {
         local PERL_VER_ACT=$(perl -v | grep 'v[0-9][0-9]*' | cut -d. -f1 | sed 's/\(.*\)\(v\)\([0-9]*\)$/\3/')
         if [ $PERL_VER_ACT -lt $PERL_VER_REQ ];then
-		echo $ERRORPERL
-        	$LOG "installer" $ERRORPERL
-                exit $ERROR1
+		salir $ERROR_PERL  "$MENSAJE_PERL"
         fi
         echo -e "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
         $LOG "installer" "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
 }
+
+
+function reasignarDirectorios() {
+BINDIR="${DIRECTORIOS[0]}"
+MAEDIR="${DIRECTORIOS[1]}"
+NOVEDIR="${DIRECTORIOS[2]}"
+DATASIZE="${DIRECTORIOS[3]}"
+ACEPDIR="${DIRECTORIOS[4]}"
+INFODIR="${DIRECTORIOS[5]}"
+RECHDIR="${DIRECTORIOS[6]}"
+LOGDIR="${DIRECTORIOS[7]}"
+LOGEXT="${DIRECTORIOS[8]}"
+LOGSIZE="${DIRECTORIOS[9]}"
+}
+
 
 function definirDirectorios() {
 local directorio retorno instalado=0
@@ -180,37 +181,27 @@ while [ $instalado -eq 0 ]; do
         for (( i = 0; i < ${#MENSAJES[@]}; ++i )); do
                 while : ; do
                         # Le pido al usuario que ingrese un valor
-                        echo -n "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "
-                        read directorio
-                        # Falta validar
-                        #${ARREGLO_FUNCIONES[$i]} "$val_ingresado" "${ARREGLO_ARGS[$i]}"
-                        retorno=$?
-                        #if [ "$ret_val" -eq 1 ]; then
-                        #        echo "$val_ingresado" | grep '^/' > /dev/null
-                        #        [ $? -eq 0 ] && val_ingresado=${val_ingresado#*/}
-                        #        echo "$val_ingresado" | grep '/$' > /dev/null
-                        #        [ $? -eq 0 ] && val_ingresado=${val_ingresado%/*}
-                        #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): 				#$val_ingresado"
-			if [ "$retorno" -eq 1 ]; then
-	                        DIRECTORIOS[$i]="$directorio"
-	                        break
-                        # Si el valor igresado es inválido
-                        #elif [ $ret_val -eq 2 ]; then
-                        #        echo -e "${ARREGLO_MSG_ERROR[$i]}"
-                        #        $LOG "Instalar_TP" "${ARREGLO_MSG[$i]} (${ARREGLO_VALORES[$i]}): $val_ingresado"
-
-                        #        $LOG "Instalar_TP" "${ARREGLO_MSG_ERROR[$i]}"
-                        # Si no ingresó nada
-                        #else
+			if [ $i = 3 -o $i =  8 -o $i =  9 ]; then
+	                        echo -n "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "  
+				$LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "
 			else
-				echo "Directorio de ${DIRECTORIOS[$i]}: ${DIRECTORIOS[$i]}"
+	                        echo -n "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "  
+				$LOG "installer" "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "
+			fi
+                        read directorio
+			if [ "$directorio" = '' ]; then
                                 $LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): ${DIRECTORIOS[$i]}"
+	                        break
+			else
+	                        DIRECTORIOS[$i]="$directorio"
+                                $LOG "installer" "$directorio"
                                 break
                         fi
                 done
         done
         # Muestro el estado de la instalación y lo loggeo
         clear
+	reasignarDirectorios
         ESTADO_INST="$COPYRIGHT
 ${HEADERS[0]}"$CONFDIR"
 ${HEADERS[1]}"$BINDIR"
@@ -332,11 +323,16 @@ echo "Instalación CONCLUIDA"
 
 function instalacionNormal() {
 	echo "Inicio de Ejecución del Installer"
-	mostrarUbicacionLog
-	mostrarUbicacionConf
-	chequearInstalacion
+	$LOG "installer" "Inicio de Ejecución del Installer"
+
+	echo "Log de la instalación: ${GRUPO}/${CONFDIR}/Installer.log"
+	$LOG "installer" "Log de la instalación: ${GRUPO}/${CONFDIR}/Installer.log"
+
+	echo "Directorio predefinido de Configuración: ${GRUPO}/${CONFDIR}"
+	$LOG "installer" "Directorio predefinido de Configuración: ${GRUPO}/${CONFDIR}"
+
 	terminosYcondiciones
-	comprobarPerl
+	chequearPerl
 	definirDirectorios
 	instalarDirectorios
 }
@@ -467,8 +463,8 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 
 # Configuro el script de log para poder usarlo en la instalación
 if [ $# -eq 0 ]; then
-	chequearFuentes	
 	iniciarLog
+	chequearFuentes	
         if [ ! -e $CONF_INSTALACION ]; then
         	instalacionNormal
 	else

@@ -49,7 +49,52 @@ Instrucciones para obtener paquete de instalación:
 				um.tab
 
 Instrucciones de instalación:
-SARASA
+	1) Desde una terminal diríjase al directorio grupo03 y asigne permisos de ejecución al instalador 		ejecutando el comando $chmod u+x Installer.sh.
+
+	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de 	configuración y copiado del sistema hacia su PC.
+
+	3) Una vez terminada la instalación, el sistema mostrará un mensaje indicando que la misma ha concluido 	exitosamente y habrá creado la siguiente estructura de directorios dentro de la carpeta grupo03 ademas 		de la carpeta src/ con los archivos fuentes:
+
+grupo03/
+
+	Installer.sh
+
+	BINDIR/
+		Initializer.sh
+		listener.sh
+		logging.sh
+		masterlist.sh
+		Mover.sh
+		rating.sh
+		reporting.pl
+		Start.sh
+		Stop.sh
+
+	MAEDIR/
+		precios/
+			proc/
+		asociados.mae
+		super.mae
+		um.tab
+
+	CONFDIR/
+		Installer.conf
+		installer.log
+
+	ARRIDIR/
+
+	ACEPDIR/
+		proc/
+
+	NOVEDIR/
+		pres/
+	INFODIR/
+	
+	LOGDIR/
+
+	Los nombres de las carpetas son variables que el usuario puede seleccionar durante la instalacion.
+	
+	4) Para verificar si falta algun componente y reinstalarlo ejecutar nuevamente ./Installer.sh y el 		instalador lo guiara en la recuperacion de la instalacion.
 
 
 Instrucciones de ejecución:

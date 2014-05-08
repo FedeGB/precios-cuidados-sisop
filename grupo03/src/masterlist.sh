@@ -126,7 +126,7 @@ logging.sh "Masterlist" "Cantidad de Listas de precios a procesar: $cantidadArch
 IFS=$'\n' # Modifico Internal Field Separator
 
 if [[ $cantidadArchivos -eq 0 ]]; then
-	echo "No hay archivos para procesar.";
+	logging.sh "Masterlist" "No hay archivos para procesar." "WAR";
 else
 	for archivoPrecios in $(ls $pathPrecios); do 
 		#Evito procesar el directorio proc

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-###################Variables de entorno#######################
+###################Definicion de variables#######################
 
 # Codigos de error:
 ERROR0=0	
@@ -13,13 +13,13 @@ ERROR_ARCHIVO=4
 
 GRUPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NUMGRUPO=03
-VERSION='v1.0'
+VERSION="v1.0"
 ARCHIVOLOG="logging.sh"
 LOG="./${ARCHIVOLOG}"
 CONFDIR="conf"
 CONF_INSTALACION="${GRUPO}/${CONFDIR}/Installer.conf"
 SRCDIR="src"
-PERL_VER_REQ=5
+VERSION_PERL=5
 SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.pl' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
 
 #Ubicaciones de directorios
@@ -64,14 +64,13 @@ HEADER11="Estado de la instalación: "
 
 #Mensajes generales
 COPYRIGHT="TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright © Grupo $NUMGRUPO"
-TERM_Y_COND="$COPYRIGHT\n\n Al instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
+TERM_Y_COND="$COPYRIGHT\n\nAl instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
 MENSAJE_PERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o superior. Efectúe su instalación e inténtelo nuevamente.\n\n Proceso de Instalación Cancelado"
 
 #Funciones
 
 function showVersion() {
         echo -e "Universidad de Buenos Aires - Facultad de Ingeniería\n7508 Sistemas Operativos\nTrabajo Práctico: RETAILC-$VERSION\nGrupo $NUMGRUPO\n1º cuat. 2014\n"
-        echo -e "$COPYRIGHT\n"
 }
 
 function showHelp() {
@@ -89,7 +88,7 @@ function salir() {
 	echo -e "$2"
 	$LOG "installer" "$2"
 	$LOG "installer" "Proceso de instalación finalizado"
-	[ -e ${BASE}/${ARCHIVOLOG} ] && rm ${BASE}/${ARCHIVOLOG}
+	[ -e ${GRUPO}/${ARCHIVOLOG} ] && rm ${GRUPO}/${ARCHIVOLOG}
 	exit $1
 }
 
@@ -101,7 +100,7 @@ function respuestaSINO() {
         ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
         if [ "$ELECCION" != 'si' -a "$ELECCION" != 's' -a "$ELECCION" != '' ]; then
                 $LOG "installer" "$ELECCION"
-                SALIR $ERROR_USUARIO
+                salir $ERROR_USUARIO
         else
 		$LOG "installer" "$ELECCION"
         fi
@@ -144,18 +143,18 @@ function chequearFuentes() {
 }
 
 function terminosYcondiciones() {
-	echo -e "$TERM_Y_COND"
+	echo -e "\n\n$TERM_Y_COND"
 	$LOG "installer" "$TERM_Y_COND"
 	respuestaSINO
 }
 
 function chequearPerl() {
-        local PERL_VER_ACT=$(perl -v | grep 'v[0-9][0-9]*' | cut -d. -f1 | sed 's/\(.*\)\(v\)\([0-9]*\)$/\3/')
-        if [ $PERL_VER_ACT -lt $PERL_VER_REQ ];then
+        local aux=$(perl -v | grep 'v[0-9][0-9]*' | cut -d. -f1 | sed 's/\(.*\)\(v\)\([0-9]*\)$/\3/')
+        if [ $aux -lt $VERSION_PERL ];then
 		salir $ERROR_PERL  "$MENSAJE_PERL"
         fi
-        echo -e "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
-        $LOG "installer" "$COPYRIGHT\n\nPerl Version: $PERL_VER_ACT"
+        echo -e "$COPYRIGHT\n\nPerl Version: $aux"
+        $LOG "installer" "$COPYRIGHT\n\nPerl Version: $aux"
 }
 
 
@@ -216,7 +215,7 @@ ${HEADERS[6]}"$INFODIR"
 ${HEADERS[7]}"$RECHDIR"
 ${HEADERS[8]}"$LOGDIR"/<comando>."$LOGEXT"
 ${HEADERS[9]}"$LOGSIZE" Kb        
-${HEADERS[10]}"LISTA""
+${HEADERS[10]} LISTA"
 
         echo "$ESTADO_INST"
         $LOG "installer" "$ESTADO_INST"
@@ -312,9 +311,11 @@ function instalacionNormal() {
 	echo "Inicio de Ejecución del Installer"
 	$LOG "installer" "Inicio de Ejecución del Installer"
 
+	[ -d $CONFDIR ] || mkdir $CONFDIR
 	echo "Log de la instalación: ${GRUPO}/${CONFDIR}/Installer.log"
 	$LOG "installer" "Log de la instalación: ${GRUPO}/${CONFDIR}/Installer.log"
 
+	
 	echo "Directorio predefinido de Configuración: ${GRUPO}/${CONFDIR}"
 	$LOG "installer" "Directorio predefinido de Configuración: ${GRUPO}/${CONFDIR}"
 
@@ -400,8 +401,7 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
         #Chequeo si tengo que reinstalar componentes
 	if [ ${#DIRFALTANTES[@]} -eq 0 -a ${#ARCHFALTANTES[@]} -eq 0 ]; then
 		RESUMEN+="\nEstado de la Instalación: COMPLETA\n\nProceso de Instalación Cancelado"
-		echo -e "$RESUMEN"
-		$LOG "installer" "$RESUMEN"
+		salir $ERROR0 "$RESUMEN"
         else
                 RESUMEN+="\n\nComponentes faltantes:\n\nDirectorios:\n"
                 for (( i=0; i <= ${#DIRFALTANTES[@]}; ++i)); do
@@ -432,8 +432,9 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 				[ "$s" = "$NOMBRE" ] && chmod u+x "$ARCHIVO"
                         done
 		done
+	        salir $ERROR0 "Instalación CONCLUIDA"
 	fi
-        salir $ERROR0 "Instalación CONCLUIDA"
+
 
 }
 

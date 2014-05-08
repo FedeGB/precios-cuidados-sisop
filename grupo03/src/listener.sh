@@ -2,6 +2,15 @@
 
 #Variables:
 CANTCICLOS=0
+doCiclo=1
+
+function on_die
+{
+	doCiclo=0
+}
+
+trap 'on_die' SIGTERM SIGINT
+
 #Valida que un usuario sea asociado
 #Parámetros:
 #$1 -> Nombre de usuario
@@ -146,7 +155,7 @@ if [[ -z $ENVINIT ]]; then
 	exit 1
 fi
 #Ciclo infinito
-while [[ 1 ]]; do
+while [[ $doCiclo -eq 1 ]]; do
 	#Grabar en el log el nro de ciclo
 	CANTCICLOS=`expr $CANTCICLOS + 1`
 	bash logging.sh listener "Nro de Ciclo: $CANTCICLOS"
@@ -201,4 +210,5 @@ while [[ 1 ]]; do
 	#Dormir
 	sleep 30
 done
+logging.sh listener "Fin de ejecución"
 exit 0

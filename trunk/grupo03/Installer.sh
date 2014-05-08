@@ -11,7 +11,7 @@ ERROR_USUARIO=3
 ERROR_ARCHIVO=4	
 
 
-GRUPO="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+GRUPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NUMGRUPO=03
 VERSION="v1.0"
 ARCHIVOLOG="logging.sh"
@@ -120,7 +120,7 @@ function iniciarLog() {
 
 
 function chequearFuentes() {
-	local FALTANTES
+	declare -a local FALTANTES 
 	
 	echo -n "Chequeando Fuentes . . . . "
 
@@ -131,7 +131,7 @@ function chequearFuentes() {
 	else
         	[ -d "${GRUPO}/$SRCDIR" ] || FALTANTES=("${FALTANTES[@]}" "${GRUPO}/$SRCDIR")
 	fi
-
+	
 	if [ ${#FALTANTES[@]} -gt 0 ]; then
 		echo -e "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
 		$LOG "installer" "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."

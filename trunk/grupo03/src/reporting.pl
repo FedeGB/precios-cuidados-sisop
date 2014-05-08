@@ -1,4 +1,5 @@
 
+
 #!/bin/perl 
 
 #use warnings;
@@ -25,15 +26,6 @@ $regex_campo_faltante='[0-9]';
 
 
 &menu;
-close (SUPERMERCADOS);
-close (INFODIR);
-close (INFORME);
-close (OCP_DIR);
-close (OCP);
-
-
-
-
 
 
 
@@ -66,6 +58,12 @@ sub menu {
 		if ($parametros_menu =~ /-f/) {&rep_precio_faltante;}
 		if ($parametros_menu =~ /-mr/ ) {&rep_menor_precio_mas_referencia;}
 		if ($parametros_menu =~ /-dr/ ) {&donde_comprar_mas_referencia;}
+
+		close (SUPERMERCADOS);
+		close (INFODIR);
+		close (INFORME);
+		close (OCP_DIR);
+		close (OCP);
 		
 	}
 
@@ -85,7 +83,7 @@ sub abrir_maestro_super {
 
 	# el registro del archivo se compone de: SUPER_ID;PROVINCIA;NOMBRE_SUPER;NRO_DOC;TIPO_DOC;DIRECCION
 	@campos_super= split (/;/, $registro);
-	$hash_super{$campos_super[0]}= join ('-', "$campos_super[2]", "$campos_super[1]"); 
+	$hash_super{$campos_super[0]}= join ('-', "$campos_super[2]", "$campos_super[1]");
 	}
 	
 }
@@ -204,6 +202,7 @@ sub rep_precios_referencia {
 		print "NRO de ITEM\t|PRODUCTO PEDIDO\t|PRODUCTO ENCONTRADO\t|PRECIO\t|NOMBRE_SUPER_PROVINCIA\n\n"; if ($filtro_w) {print INFORME "NRO de ITEM\t|PRODUCTO PEDIDO\t|PRODUCTO ENCONTRADO\t|PRECIO\t|NOMBRE_SUPER_PROVINCIA\n\n";} 
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			# Filtro para la opcion -r ..precios de referencia 
@@ -241,6 +240,7 @@ sub rep_precio_faltante {
 		print "NRO de ITEM\t|PRODUCTO PEDIDO\t|PRODUCTO ENCONTRADO\t|PRECIO\t|NOMBRE_SUPER_PROVINCIA\n\n"; if ($filtro_w) {print INFORME "NRO de ITEM\t|PRODUCTO PEDIDO\t|PRODUCTO ENCONTRADO\t|PRECIO\t|NOMBRE_SUPER_PROVINCIA\n\n";} 
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			# Filtro para la opcion -f ..precios faltantes
@@ -280,6 +280,7 @@ sub rep_menor_precio {
 		local %hash_items_menores_precios;
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			#Descarto los super con precios cuidados
@@ -299,7 +300,8 @@ sub rep_menor_precio {
 							
 		}
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios.
-		for $linea_actual (values(%hash_items_menores_precios)){ 
+		#rehago la lista devuelta por los values del hash ordenada por item 			
+		for $linea_actual (  values(%hash_items_menores_precios) ){      #&ordenar_array_registros_OCP      					
 
 			@campos_hash_items_menores_precios= split (/;/, $linea_actual); 
 			if ($filtro_x) { 
@@ -313,7 +315,7 @@ sub rep_menor_precio {
 			
 		}
 	}	
-	return (values(%hash_items_menores_precios));
+	return (  values(%hash_items_menores_precios));
 }
 
 
@@ -340,6 +342,7 @@ sub rep_donde_comprar {
 		$SUPER_ID_presentes='';
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			if($SUPER_ID_presentes !~ /$campos_OCP[2]/) {$SUPER_ID_presentes .= "$campos_OCP[2];";}
@@ -362,7 +365,7 @@ sub rep_donde_comprar {
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios ordenandolos por SUPER_ID segun el string $SUPER_ID_presentes .
 		for $SUPER_ID_actual (split (/;/, $SUPER_ID_presentes)) {
 
-			for $linea_actual (values(%hash_items_menores_precios)){ 
+			for $linea_actual (  values(%hash_items_menores_precios)){ 
 
 				@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 				if ($SUPER_ID_actual eq $campos_hash_items_menores_precios[2]) {
@@ -380,7 +383,7 @@ sub rep_donde_comprar {
 		print "\n"; if ($filtro_w) {print INFORME "\n";} 
 		}
 	}	
-	return (values(%hash_items_menores_precios));
+	return (  values(%hash_items_menores_precios));
 
 
 #debo copiar lo de rep_menor_precio y en el loop que arma el hash para la salida debo armar un string en variable escalar
@@ -415,6 +418,7 @@ sub rep_menor_precio_mas_referencia {
 		local %hash_items_precios_cuidados;
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			#Descarto los super con precios cuidados
@@ -437,7 +441,7 @@ sub rep_menor_precio_mas_referencia {
 							
 		}
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios.
-		for $linea_actual (values(%hash_items_menores_precios)){ 
+		for $linea_actual (  values(%hash_items_menores_precios)){ 
 
 			@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 			#Aplico el filtro_x para supermercados-provincias elegidos por el usuario																
@@ -456,7 +460,7 @@ sub rep_menor_precio_mas_referencia {
 			}
 		}
 	}	
-	return (values(%hash_items_menores_precios));
+	return (  values(%hash_items_menores_precios));
 }
 
 
@@ -485,6 +489,7 @@ sub donde_comprar_mas_referencia {
 		$SUPER_ID_presentes='';
 		for $linea_actual (<OCP>) {
 
+			chop $linea_actual;
 			# el registro del archivo se compone de: NRO de ITEM;PRODUCTO PEDIDO;SUPER_ID;PRODUCTO ENCONTRADO;PRECIO
 			my @campos_OCP= split (/;/, $linea_actual);	
 			if($SUPER_ID_presentes !~ /$campos_OCP[2]/) {$SUPER_ID_presentes .= "$campos_OCP[2];";}
@@ -512,7 +517,7 @@ sub donde_comprar_mas_referencia {
 			#Aplico el filtro_x para supermercados-provincias elegidos por el usuario																
 			if ($filtro_x && $lista_elegida =~ /$hash_super{$SUPER_ID_actual}/ || $filtro_x == 0){
 
-				for $linea_actual (values(%hash_items_menores_precios)){ 
+				for $linea_actual (  values(%hash_items_menores_precios)){ 
 
 					@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 					if ($SUPER_ID_actual eq $campos_hash_items_menores_precios[2]) {
@@ -532,7 +537,7 @@ sub donde_comprar_mas_referencia {
 			}
 		}
 	}	
-	return (values(%hash_items_menores_precios));
+	return (  values(%hash_items_menores_precios));
 }
 
 
@@ -542,13 +547,17 @@ sub donde_comprar_mas_referencia {
 
 sub ordenar_array_registros_OCP  {
 
-#	if (join ('', @_)  /
 	
-return ();
+	#local @lista_entrada= @_; print "La lista de keys de entrada es:" .@_."\n";
+	local @lista_salida;
+	#my @lista_ordenada = sort {$a <=> $b} @lista_entrada; print "La lista de keys ordenada es:" .@lista_ordenada."\n";
+	#Copio cada elemento value del hash desde la lista ordenada de los keys hacia la lista salida
+	for ( sort {$a <=> $b} keys %hash_items_menores_precios) {
+
+		push (@lista_salida, $hash_items_menores_precios{$_}); #print "La lista de salida es:" .@lista_salida."\n";
+	}
+
+return (@lista_salida);
 }
 
 
-sub append_to_informe {
-
-	open (INFORME, ">>".$path_dir_informes."INFO_".$descriptor_mayor) or die "No se pudo reabrir el archivo de informes. $!"; 
-}

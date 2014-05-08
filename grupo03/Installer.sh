@@ -70,12 +70,12 @@ MENSAJE_PERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o
 #Funciones
 
 function showVersion() {
-        echo -e "Universidad de Buenos Aires - Facultad de Ingeniería\n7508 Sistemas Operativos\nTrabajo Práctico: Sarasa-$VERSION\nGrupo $NUMGRUPO\n2º cuat. 2013\nHome Page: http://code.google.com/p/ssoo22013/\n"
+        echo -e "Universidad de Buenos Aires - Facultad de Ingeniería\n7508 Sistemas Operativos\nTrabajo Práctico: RETAILC-$VERSION\nGrupo $NUMGRUPO\n1º cuat. 2014\n"
         echo -e "$COPYRIGHT\n"
 }
 
 function showHelp() {
-        echo "Ayuda Instalador de Sistema de Reserva de Entradas de Obras Teatrales-$VERSION"
+        echo "Ayuda Instalador RETAILC-$VERSION"
         echo -e "Uso: Instalar_TP [OPCIONES]\n"
         echo "Sin opciones                      Instala o repara el sistema normalmente"
         echo "-v                                Muestra la version del sistema"

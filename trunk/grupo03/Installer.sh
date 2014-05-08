@@ -62,8 +62,6 @@ HEADER9="Dir. de Logs de Comandos: "
 HEADER10="Tamaño máximo para los archivos de logs del sistema: "
 HEADER11="Estado de la instalación: "
 
-HEADERS=("$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER5" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" "$HEADER10" "$HEADER11")
-
 #Mensajes generales
 COPYRIGHT="TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright © Grupo $NUMGRUPO"
 TERM_Y_COND="$COPYRIGHT\n\n Al instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
@@ -202,10 +200,15 @@ while [ $instalado -eq 0 ]; do
         # Muestro el estado de la instalación y lo loggeo
         clear
 	reasignarDirectorios
+	local HEADERS=("$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER5" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" "$HEADER10" "$HEADER11")
+
         ESTADO_INST="$COPYRIGHT
 ${HEADERS[0]}"$CONFDIR"
+Installer.conf
 ${HEADERS[1]}"$BINDIR"
+Initializer.sh listener.sh masterlist.sh rating.sh reporting.pl Mover.sh Start.sh Stop.sh logging.sh
 ${HEADERS[2]}"$MAEDIR"
+asociados.mae super.mae um.tab
 ${HEADERS[3]}"$NOVEDIR"
 ${HEADERS[4]}"$DATASIZE" Mb
 ${HEADERS[5]}"$ACEPDIR"
@@ -219,10 +222,10 @@ ${HEADERS[10]}"LISTA""
         $LOG "installer" "$ESTADO_INST"
         echo -e "\nEstá de acuerdo con la configuración de instalación? (Si - No): "
         $LOG "installer" "Está de acuerdo con la configuración de instalación? (Si - No): "
-        read OPCION
-        OPCION=$(echo "$OPCION" | tr [:upper:] [:lower:])
-        [ "$OPCION" = 'si' -o "$OPCION" = 's' -o "$OPCION" = '' ] && instalado=1
-	if [ "$OPCION" == '' ]; then
+        read ELECCION
+        ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
+        [ "$ELECCION" = 'si' -o "$ELECCION" = 's' -o "$ELECCION" = '' ] && instalado=1
+	if [ "$ELECCION" == '' ]; then
 	      	$LOG "installer" "Si"
 	else
 	      	$LOG "installer" "$OPCION"
@@ -232,18 +235,10 @@ done
 }
 
 function CrearJerarquia() {
-        local CURR_DIR
-        #local A=${1#*/}
-        TMP=$IFS
-        IFS='/'
-        for word in $1; do
-                CURR_DIR+="$word/"
-                if [ ! -d "$CURR_DIR" ]; then
-                        mkdir "$CURR_DIR"
-			echo "$1"
-                fi
-        done
-        IFS=$TMP
+	if [ ! -d "$1" ]; then
+		mkdir "$1"
+		echo "$1"
+        fi
 }
 
 function GuardarDatos() {
@@ -259,50 +254,47 @@ respuestaSINO
 
 # Creo la estructura de directorios
 echo "Creando Estructuras de Directorios"
-MAEDIR2="$MAEDIR/precios/proc"
+MAEDIR2="$MAEDIR/precios"
+MAEDIR3="$MAEDIR/precios/proc"
 ACEPDIR2="$ACEPDIR/proc"
 INFODIR2="$INFODIR/pres"
 
-DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$MAEDIR2" "$ACEPDIR2" "$INFODIR2")
+DIRECTORIOS2=( "$BINDIR" "$MAEDIR" "$MAEDIR2" "$MAEDIR3" "$NOVEDIR" "$ACEPDIR" "$ACEPDIR2" "$INFODIR" "$INFODIR2" "$RECHDIR" "$LOGDIR" )
 
 for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
-        CrearJerarquia "${DIRECTORIOS[$i]}"
+        CrearJerarquia "${DIRECTORIOS2[$i]}"
 done
 
-# Copio los archivos necesarios para la ejecución del sistema
+
 echo "Instalando Archivos Maestros y Tablas"
-local mae_files
+local MAE_ARCHIVOS
 for file in $(ls ${SRCDIR}/*.mae); do
         cp "$file" "$MAEDIR"
         file=${file##*/}
-        mae_files+="${file#$BASE}"'$'
+        MAE_ARCHIVOS+="${file#$BASE}"'$'
 done
 
-local tab_files
+local TAB_ARCHIVOS
 for file in $(ls ${SRCDIR}/*.tab); do
         cp "$file" "$MAEDIR"
         file=${file##*/}
-        tab_files+="${file#$BASE}"'$'
+        TAB_ARCHIVOS+="${file#$BASE}"'$'
 done
 
 
 echo "Instalando Programas y Funciones"
-local script_files
+local SCRIPT_ARCHIVOS
 for script in "${SCRIPTS[@]}"; do
         cp "${SRCDIR}/${script}" "$BINDIR"
         chmod u+x "${BINDIR}/${script}"
-        script_files+="${script}"'$'
+        SCRIPT_ARCHIVOS+="${script}"'$'
 done
 
 
-BASE1="${GRUPO}/"
 
 echo "Actualizando la configuración del sistema"
 local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR DATASIZE ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE )
-local VALORES=("$GRUPO" "${CONFDIR#$BASE1}" "${BINDIR#$BASE1}" "${MAEDIR#$BASE1}" "${NOVEDIR#$BASE1}" "${DATASIZE#$BASE1}" "${ACEPDIR#$BASE1}" "${INFODIR#$BASE1}" "${RECHDIR#$BASE1}"  "${LOGDIR#$BASE1}" "${LOGEXT#$BASE1}" "${LOGSIZE#$BASE1}")
-
-#creo archivo d configuracion
-#[ -d "$CONF_INSTALACION" ] || mkdir $CONF_INSTALACION
+local VALORES=("$GRUPO" "${CONFDIR}" "${BINDIR}" "${MAEDIR}" "${NOVEDIR}" "${DATASIZE}" "${ACEPDIR}" "${INFODIR}" "${RECHDIR}"  "${LOGDIR}" "${LOGEXT}" "${LOGSIZE}")
 
 # Guardo las decisiones del usuario
 for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
@@ -310,14 +302,9 @@ for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
 done
 
 # Guardo la ubicación de los archivos
-GuardarDatos "MAEFILES" "$mae_files"
-GuardarDatos "DISFILES" "$dis_files"
-GuardarDatos "SCRIPTFILES" "$script_files"
-
-
-echo "Instalación CONCLUIDA"
-
-#error_exit $ERRNO0 ''
+GuardarDatos "MAEFILES" "$MAE_ARCHIVOS"
+GuardarDatos "TABFILES" "$TAB_ARCHIVOS"
+GuardarDatos "SCRIPTFILES" "$SCRIPT_ARCHIVOS"
 
 }
 
@@ -335,6 +322,8 @@ function instalacionNormal() {
 	chequearPerl
 	definirDirectorios
 	instalarDirectorios
+	
+	salir $ERROR0 "Instalación CONCLUIDA"
 }
 
 function reinstalacion() {
@@ -343,87 +332,77 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 	$LOG 'installer' 'Comprobando Instalación existente'
         local RESUMEN="$COPYRIGHT\n\n"
 	local EXPR DIR DIRFALTANES ARCHFALTANTES
-	local reg_name=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE)
+	local REG_NOMBRE=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE)
 	local reg_value=("$GRUPO" 'conf' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.')
-	local reg_validacion=(ValidarGrupo ValidarConf ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarDirectorio ValidarExtension)
 	local HEADERS2=('' "$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" )
 
-	local BASE2=${GRUPO}/
-	for (( i=0; i < ${#reg_name[@]}; ++i)); do
-		local reg=$(grep '^'"${reg_name[$i]}"'=[^=]\{1,\}='"$(whoami)=" "$CONF_INSTALACION")
-		[ -z "$reg" ] && exit $ERROR5 
-		#"Archivo de configuración corrupto. Error en el registro ${reg_name[$i]}."
+	for (( i=0; i < ${#REG_NOMBRE[@]}; ++i)); do
+		local reg=$(grep '^'"${REG_NOMBRE[$i]}"'=[^=]\{1,\}='"$(whoami)=" "$CONF_INSTALACION")
+		[ -z "$reg" ] && exit salir ERROR_ARCHIVO "Archivo de configuración corrupto"
 		reg=$(echo "$reg" | cut -d'=' -f2)
-		#${reg_validacion[$i]} "$reg"
-		#[ $? -eq 2 ] && exit $ERROR5 
-		#"Archivo de configuración corrupto. Error en el registro ${reg_name[$i]}."
-		[ "${reg_name[$i]}" = 'GRUPO' ] && continue
-		[ "${reg_name[$i]}" = 'LOGSIZE' ] && continue
-		if [ "${reg_name[$i]}" = 'LOGEXT' ]; then
+		[ "${REG_NOMBRE[$i]}" = 'GRUPO' ] && continue
+		[ "${REG_NOMBRE[$i]}" = 'LOGSIZE' ] && continue
+		if [ "${REG_NOMBRE[$i]}" = 'LOGEXT' ]; then
 			RESUMEN+="$reg\n"	
 			continue		
 		fi
-		if [ "${reg_name[$i]}" = 'LOGDIR' ]; then
-			RESUMEN+="${HEADERS2[$i]}$BASE2$reg/<comando>."
+		if [ "${REG_NOMBRE[$i]}" = 'LOGDIR' ]; then
+			RESUMEN+="${HEADERS2[$i]}${GRUPO}/$reg/<comando>."
 			continue
 		fi
-		if [ "${reg_name[$i]}" = 'CONFDIR' -o "${reg_name[$i]}" = 'BINDIR' -o "${reg_name[$i]}" = 'MAEDIR' ]; then
-			RESUMEN+="${HEADERS2[$i]}""$BASE2$reg\n"
-			if [ -e "$BASE2$reg" ]; then
-        			RESUMEN+='Archivos existentes:\n'$(ls "$BASE2$reg")"\n"
+		if [ "${REG_NOMBRE[$i]}" = 'CONFDIR' -o "${REG_NOMBRE[$i]}" = 'BINDIR' -o "${REG_NOMBRE[$i]}" = 'MAEDIR' ]; then
+			RESUMEN+="${HEADERS2[$i]}""${GRUPO}/$reg\n"
+			if [ -e "${GRUPO}/$reg" ]; then
+        			RESUMEN+='Archivos existentes:\n'$(ls "${GRUPO}/$reg")"\n"
 		        else
-                	        DIRFALTANTES=("${DIRFALTANTES[@]}" "$BASE2$reg")
-		                #RESUMEN+="\n\n"
+                	        DIRFALTANTES=("${DIRFALTANTES[@]}" "${GRUPO}/$reg")
                 	fi	
-		elif [ "${reg_name[$i]}" = 'LOGEXT' -o "${reg_name[$i]}" = 'LOGDIR' ]; then
+		elif [ "${REG_NOMBRE[$i]}" = 'LOGEXT' -o "${REG_NOMBRE[$i]}" = 'LOGDIR' ]; then
 			continue
 		else
-        		[ -e "$BASE2$reg" ] || DIRFALTANTES=("${DIRFALTANTES[@]}" "$BASE2$reg")
+        		[ -e "${GRUPO}/$reg" ] || DIRFALTANTES=("${DIRFALTANTES[@]}" "${GRUPO}/$reg")
 			RESUMEN+="${HEADERS2[$i]}""$reg\n"
-			#RESUMEN+='\n\n'
 		fi
 	done
 
-	[ -z "$(grep "^MAEFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && exit $ERROR5
-# "Archivo de configuración corrupto. Error en la variable MAEFILES."
-
+	#chequeo archivos .mae
+	[ -z "$(grep "^MAEFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && salir $ERROR_ARCHIVO "Archivo de configuración corrupto"
         local TMP=$IFS
         IFS='$'
-
-        # Reviso los archivos
         local MAEFILES=$(grep "^MAEFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
 	MAEDIR=$(grep '^MAEDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
         for i in $(echo "$MAEFILES" | cat); do
-		[ -e "$BASE2$MAEDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$MAEDIR/$i")
-	done
-		
-	IFS=$TMP
-	[ -z "$(grep "^DISFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && error_exit $ERRNO5 "Archivo de configuración corrupto. Error en la variable DISFILES."
-	IFS='$'
-	local DISFILES=$(grep "^DISFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
-	PROCDIR=$(grep '^PROCDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
-	for i in $(echo "$DISFILES" | cat); do
-		[ -e "$BASE2$PROCDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$PROCDIR/$i")
+		[ -e "${GRUPO}/$MAEDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "${GRUPO}/$MAEDIR/$i")
 	done
 
+	#chequeo archivos .tab
 	IFS=$TMP
-	[ -z "$(grep "^SCRIPTFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && error_exit $ERRNO5 "Archivo de configuración corrupto. Error en la variable SCRIPTFILES."
+	[ -z "$(grep "^TABFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && salir $ERROR_ARCHIVO "Archivo de configuración corrupto"
+	IFS='$'
+	local TABFILES=$(grep "^TABFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
+	MAEDIR=$(grep '^MAEDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
+	for i in $(echo "$TABFILES" | cat); do
+		[ -e "${GRUPO}/$MAEDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "${GRUPO}/$MAEDIR/$i")
+	done
+	
+	#chequeo scripts
+	IFS=$TMP
+	[ -z "$(grep "^SCRIPTFILES="'.*'"=$(whoami)=" "$CONF_INSTALACION")" ] && salir $ERROR_ARCHIVO "Archivo de configuración corrupto"
 	IFS='$'
 	local SCRIPTFILES=$(grep "^SCRIPTFILES" "$CONF_INSTALACION" | cut -d'=' -f2)
 	BINDIR=$(grep '^BINDIR' "$CONF_INSTALACION" | cut -d'=' -f2)
 	for i in $(echo "$SCRIPTFILES" | cat); do
-		[ -e "$BASE2$BINDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "$BASE2$BINDIR/$i")
+		[ -e "${GRUPO}/$BINDIR/$i" ] || ARCHFALTANTES=("${ARCHFALTANTES[@]}" "${GRUPO}/$BINDIR/$i")
 	done
      
 	IFS=$TMP
-        # Me fijo si tengo que restaurar algo
+
+        #Chequeo si tengo que reinstalar componentes
 	if [ ${#DIRFALTANTES[@]} -eq 0 -a ${#ARCHFALTANTES[@]} -eq 0 ]; then
-		# INSTALACIÓN COMPLETA
 		RESUMEN+="\nEstado de la Instalación: COMPLETA\n\nProceso de Instalación Cancelado"
 		echo -e "$RESUMEN"
 		$LOG "installer" "$RESUMEN"
         else
-		# REPARAR
                 RESUMEN+="\n\nComponentes faltantes:\n\nDirectorios:\n"
                 for (( i=0; i <= ${#DIRFALTANTES[@]}; ++i)); do
 			RESUMEN+="${DIRFALTANTES[$i]##*/}\n"
@@ -436,14 +415,15 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
                 echo -e "$RESUMEN"
                 $LOG "installer" "$RESUMEN"
 		respuestaSINO
-                # Instalar lo que falta
-                echo -n "Restaurando Estructuras de Directorio. . . . "
+
+                # Reinstalo lo q falta
+                echo -e "Restaurando Estructuras de Directorio\n"
 		for DIRECTORIO in "${DIRFALTANTES[@]}"; do
 			CrearJerarquia "$DIRECTORIO"
                 done
-                echo HECHO
+
                 local NOMBRE DIRECCION
-                echo -n "Restaurando Archivos faltantes. . . . "
+                echo -e "Restaurando Archivos faltantes\n"
 		for ARCHIVO in "${ARCHFALTANTES[@]}"; do
 			NOMBRE=${ARCHIVO##*/}
                         DIRECCION=${ARCHIVO%/*}
@@ -452,16 +432,13 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 				[ "$s" = "$NOMBRE" ] && chmod u+x "$ARCHIVO"
                         done
 		done
-                echo HECHO
-                echo "Instalación CONCLUIDA"
 	fi
-        exit $ERROR0
+        salir $ERROR0 "Instalación CONCLUIDA"
 
 }
 
 #main
 
-# Configuro el script de log para poder usarlo en la instalación
 if [ $# -eq 0 ]; then
 	iniciarLog
 	chequearFuentes	

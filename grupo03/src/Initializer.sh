@@ -220,13 +220,10 @@ function verificarArchivos
  		if [ $CHOICE == "s" ]
  		then
  			$GRUPO/$BINDIR/logging.sh "Initializer" "Inicializando listener"
- 			$GRUPO/$BINDIR/Start.sh "Initializer" "-b" listener # Verifica si el proceso está corriendo o no
+ 			Start.sh "Initializer" "-b" "listener" # Verifica si el proceso está corriendo o no
  			VALIDO=1
  		elif [ $CHOICE == "n" ]
  		then
- 			echo "Usted eligio no inicializr el listener.
- 			Para ejecutarlo hagalo a traves del comando Start:
- 			Start.sh NULL -b"
  			$GRUPO/$BINDIR/logging.sh "Initializer" "El listener no fue inicializado"
  			VALIDO=1
  		else
@@ -236,9 +233,6 @@ function verificarArchivos
  		fi
 
  	done
-
- 	echo "Para detener el listener use el comando Stop:
- 	Stop.sh listener"
 
  	return 0
  }
@@ -263,8 +257,13 @@ function verificarArchivos
  	if ! [ -z $LISPID ]
  	then
  		echo "Listener corriendo bajo el no.: $LISPID"
+ 		echo "Para detener el listener use el comando Stop:
+ 	Stop.sh listener"
  	else
  		echo "Listener no está corriendo"
+ 		echo "Usted eligio no inicializr el listener.
+ Para ejecutarlo hagalo a traves del comando Start:
+ 	Start.sh NULL -b listener"
  	fi
 
  	return 0

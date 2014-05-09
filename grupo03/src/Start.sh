@@ -37,7 +37,7 @@ if ! [ -z $PID ]
 then
 	if ! [ $CALL == "NULL" ]
 	then
-	bash logging.sh "$CALL" "El proceso $PRO ya está corriendo" "WAR"
+	logging.sh "$CALL" "El proceso $PRO ya está corriendo" "WAR"
 	fi
 	echo "El proceso $PRO ya está corriendo"
 	exit 1
@@ -47,25 +47,25 @@ if [ $# -eq 3 ]
 then
 	if [ "$TIPO" == "-f" ]
 	then
-		./$CMD
+		$CMD
 	else
-		./$CMD &
+		$CMD &
 	fi
 else
 	last=$(expr $# + 1)
 	declare -a PAR=("$@")
 	if [ "$TIPO" == "-b" ]
 	then
-		./"$CMD" "${PAR[@]:3:$last}" &
+		"$CMD" "${PAR[@]:3:$last}" &
 	else
-		./"$CMD" "${PAR[@]:3:$last}"
+		"$CMD" "${PAR[@]:3:$last}"
 	fi
 	
 fi
 
 if ! [ $CALL == "NULL" ]
 then
-	bash logging.sh "$CALL" "Comenzo la ejecución de $PRO"
+	logging.sh "$CALL" "Comenzo la ejecución de $PRO"
 fi
 
 exit 0

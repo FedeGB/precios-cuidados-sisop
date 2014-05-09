@@ -141,18 +141,18 @@ else
 			continue;
 		fi
 		cabecera=`sed -n '1p' "$pathPrecios/$archivoPrecios"` # Obtengo el registro de cabecera
-		nombreSuper=`echo $cabecera | sed 's-^\([^;]*\);.*-\1-'`
-		nombreProv=`echo $cabecera | sed 's-^[^;]*;\([^;]*\);.*-\1-'`
+		nombreSuper=`echo "$cabecera" | sed 's-^\([^;]*\);.*-\1-'`
+		nombreProv=`echo "$cabecera" | sed 's-^[^;]*;\([^;]*\);.*-\1-'`
 		busquedaSuper=`grep "^[^;]*;$nombreProv;$nombreSuper;[^;]*;[^;]*;[^;]*$" $superMae`
 		busquedaSuper=`echo $busquedaSuper | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-		usuario=`echo $archivoPrecios | sed 's-^[^.]*.\(.*\)$-\1-'`
-		cantidadCampos=`echo $cabecera | sed 's-^[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		usuario=`echo "$archivoPrecios" | sed 's-^[^.]*.\(.*\)$-\1-'`
+		cantidadCampos=`echo "$cabecera" | sed 's-^[^;]*;[^;]*;\([1-9]*\).*-\1-'`
 		cantidadCampos=`echo $cantidadCampos | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-		posProducto=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		posProducto=`echo "$cabecera" | sed 's-^[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
 		posProducto=`echo $posProducto | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-		posPrecio=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
+		posPrecio=`echo "$cabecera" | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;\([1-9]*\).*-\1-'`
 		posPrecio=`echo $posPrecio | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
-		mailColaborador=`echo $cabecera | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;\([^;]*\)$-\1-'`
+		mailColaborador=`echo "$cabecera" | sed 's-^[^;]*;[^;]*;[^;]*;[^;]*;[^;]*;\([^;]*\)$-\1-'`
 		
 		busquedaUsuario=`grep "^[^;]*;[^;]*;$usuario;[^;]*;$mailColaborador$" $asociadosMae` # Busco si existe registro con ese usuario y mail
 		busquedaUsuario=`echo $busquedaUsuario | sed 's-^$-\-1-'` # si no matchea, reemplazo por -1
@@ -163,7 +163,7 @@ else
 		fi
 		superID=`echo $busquedaSuper | sed 's-^\([0-9]*\);.*-\1-'`
 
-		fechaArchivo=`echo $archivoPrecios | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
+		fechaArchivo=`echo "$archivoPrecios" | sed 's/^[^-]*-\([^.]*\).*$/\1/'`
 		fechaArchivo=`echo $fechaArchivo | grep "^[0-9]\{4\}\(\(\(01\|03\|05\|07\|08\|10\|12\)\(0[1-9]\|[12][0-9]\|3[01]\)\)\|\(\(04\|06\|09\|11\)\(0[1-9]\|[12][0-9]\|30\)\)\|02\(0[1-9]\|1[0-9]\|2[0-8]\)\)"`
 		fechaArchivo=`echo $fechaArchivo | sed 's-^$-\-1-'` # si no matchea (fecha invalida), reemplazo por -1
 

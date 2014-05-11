@@ -22,10 +22,10 @@ trap 'on_die' SIGTERM SIGINT
 function usuario_es_asociado
 {
 	declare local validationData=`cat "$GRUPO/$MAEDIR"/asociados.mae | grep "^[^;]*;[^;]*;$1;[0 | 1];[^@]*@[^@]*\.[^@]*$" | sed "s~^[^;]*;[^;]*;\($1\);\([0 | 1]\);[^@]*@[^@]*\.[^@]*\$~\1-\2~"`
-	declare local asociado=`echo $validationData | sed "s~^\($1\)-[0 | 1]\$~\1~"`
+	declare local asociado=`echo "$validationData" | sed "s~^\($1\)-[0 | 1]\$~\1~"`
 	if [[ "$asociado" == "$1" ]]; then
 		if [[ "$2" == "Y" ]]; then
-			declare local colaborador=`echo $validationData | sed "s~^$1-\([0 | 1]\)\$~\1~"`
+			declare local colaborador=`echo "$validationData" | sed "s~^$1-\([0 | 1]\)\$~\1~"`
 			if [[ "$colaborador" == "" || "$colaborador" == 0 ]]; then
 				return 2
 			fi
@@ -134,15 +134,15 @@ function disparar_proceso
 	if [[ `find "$1" -maxdepth 1 -type f | wc -l` -ne 0  ]]; then
 		#Si se está ejecutando $2 o $3 entonces pospongo la ejecución.
 		if [[ ! -z `pgrep "$2"` || ! -z `pgrep "$3"` ]]; then
-			bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
+			logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 		else
 			"$2.sh" &
 			res=$?
 			declare local pid=$(pgrep "$2")
 			if [[ $res -ne 0 ]]; then
-				bash logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
+				logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 			else
-				bash logging.sh listener "$procName corriendo bajo el no.: $pid"
+				logging.sh listener "$procName corriendo bajo el no.: $pid"
 				echo "$procName ejecutado, PID: $pid"
 			fi
 		fi
@@ -150,32 +150,33 @@ function disparar_proceso
 }
 
 #Si el ambiente no está inicializado salgo con error.
-if [[ -z $ENVINIT ]]; then
-	bash logging.sh listener "Ambiente no inicializado" ERR
+if [[ $ENVINIT -eq 0 ]]; then
+	logging.sh listener "Ambiente no inicializado" ERR
 	exit 1
 fi
 #Ciclo infinito
 while [[ $doCiclo -eq 1 ]]; do
 	#Grabar en el log el nro de ciclo
 	CANTCICLOS=`expr $CANTCICLOS + 1`
-	bash logging.sh listener "Nro de Ciclo: $CANTCICLOS"
+	logging.sh listener "Nro de Ciclo: $CANTCICLOS"
+	IFS=$'\n'
+	set -f
 	#Para cada archivo en $NOVEDIR ver que sea lista de compras o precios, sino rechazar
 	#Archivos con pinta de lista de compras
 	for arch in `ls -1 "$GRUPO/$NOVEDIR/" | grep "^[^\.]*\....$"`;
 	do
 		declare local str=`file "$GRUPO/$NOVEDIR/$arch" | sed 's-.*\(text\)$-\1-'`
 		if [[ "$str" != "text" ]]; then
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
 		es_lista_compras "$arch"
 		declare local res=$?
 		if [[ $res -eq 1 ]]; then
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/" listener
 		else
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-			echo $prob
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
 			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
@@ -184,24 +185,24 @@ while [[ $doCiclo -eq 1 ]]; do
 	do
 		declare local str=`file "$GRUPO/$NOVEDIR/$arch" | sed 's-.*\(text\)$-\1-'`
 		if [[ "$str" != "text" ]]; then
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-			bash logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
 		es_lista_precios "$arch"
 		declare local res=$?
 		if [[ $res -eq 1 ]]; then
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/" listener
 		else
-			bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
 			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
 	#Rechazar archivos que no tengan pinta de nada
 	for arch in `ls -1 "$GRUPO/$NOVEDIR/" | grep -v "^[^\.]*-[^\.]*\..*$" | grep -v "^[^\.]*\....$"`;
 	do
-		bash Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
-		bash logging.sh listener "Archivo rechazado: Estructura de nombre de archivo no identificada"
+		Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+		logging.sh listener "Archivo rechazado: Estructura de nombre de archivo no identificada"
 	done
 	#Ver si hay que llamar a masterlist
 	disparar_proceso ""$GRUPO"/"$MAEDIR"/precios/" masterlist rating
@@ -211,4 +212,5 @@ while [[ $doCiclo -eq 1 ]]; do
 	sleep 30
 done
 logging.sh listener "Fin de ejecución"
+set +f
 exit 0

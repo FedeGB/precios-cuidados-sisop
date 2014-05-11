@@ -1,5 +1,5 @@
 ## TP SO7508 Primer Cuatrimestre 2014. Tema C, Grupo 03, RETAILC
-## Todos los derechso e izquierdos reservados ©
+## Todos los derechos e izquierdos reservados ©
 
 Requisitos mínimos para el funcionamiento de RETAILC
 	* Alguna distribución de linux
@@ -20,10 +20,12 @@ El path/dirección absoluto/a a la carpeta descomprimida (grupo03) será referid
 Instrucciones para obtener paquete de instalación:
 	1) Insertar el dispositivo de almacenamiento con el archivo tp-so-03c.tgz
 	2) Cree un nuevo directorio en donde desee
-	3) Copie el archivo tp-so-03c.tgz al directorio creado. Esto lo puede hacer mediante el comando $cp <origen> <destino>, siendo el destino el nuevo directorio. Para mas informacion consulte $man cp
-	4) En ese mismo directorio, descomprimir el archivo tp-so-03c.tgz de manera de generar el archivo tp-so-03c.tar. Para ello, puede hacerlo a traves de una terminal. Si no venia trabajando con una terminal, abra una en el directorio donde copio el archivo
+		$mkdir DEST
+		Siendo DEST el nombre del directorio a crear
+	3) Copie el archivo tp-so-03c.tgz al directorio creado. Esto lo puede hacer mediante el comando $cp <origen> <destino>, siendo el destino el nuevo directorio creado anteriormente y origen el directorio del .tgz (por ejemplo /media/A341-4AB3/tp-so-03c.tgz). Para mas información consulte $man cp
+	4) En ese mismo directorio, descomprimir el archivo tp-so-03c.tgz de manera de generar el archivo tp-so-03c.tar. Para ello, puede hacerlo a traves de una terminal. Si no venia trabajando con una terminal, abra una en el directorio donde copio el archivo.
 	4.1) Algunos sistemas de linux vienen con la opcion de abrir una terminal en el directorio con el menu que se despliega al hacer click derecho en la ventana de ese directorio. Sino puede abrir una terminal e ir moviendose por los directorios con el comando cd (ver $man cd para mas ayuda).
-	4.2) Entonces estando en el directorio que contiene el archivo tgz escriba el siguiente comando:
+	4.2) Entonces estando en el directorio que contiene el archivo tgz (copiado, no el del dispositivo) escriba el siguiente comando:
 	$gunzip tp-so-03c.tgz
 	5) Una vez obtenido el archivo .tar, en la misma terminal extraer el contenido de ese archivo con el comando: $tar -xvf tp-so-03c.tar obteniendo finalmente el directorio tp-so-03c.
 	El directorio obtenido debe contener lo siguiente:
@@ -54,11 +56,11 @@ Instrucciones para obtener paquete de instalación:
 				um.tab
 
 Instrucciones de instalación:
-	1) Desde una terminal diríjase al directorio grupo03 y asigne permisos de ejecución al instalador 		ejecutando el comando $chmod u+x Installer.sh.
+	1) Desde una terminal diríjase al directorio grupo03 y asigne permisos de ejecución al instalador ejecutando el comando $chmod u+x Installer.sh.
 
-	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de 	configuración y copiado del sistema hacia su PC.
+	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de configuración y copiado del sistema hacia su PC.
 
-	3) Una vez terminada la instalación, el sistema mostrará un mensaje indicando que la misma ha concluido 	exitosamente y habrá creado la siguiente estructura de directorios dentro de la carpeta grupo03 ademas 		de la carpeta src/ con los archivos fuentes:
+	3) Una vez terminada la instalación, el sistema mostrará un mensaje indicando que la misma ha concluido exitosamente y habrá creado la siguiente estructura de directorios dentro de la carpeta grupo03 ademas de la carpeta src/ con los archivos fuentes:
 
 grupo03/
 
@@ -97,27 +99,27 @@ grupo03/
 	
 	LOGDIR/
 
-	Los nombres de las carpetas son variables que el usuario puede seleccionar durante la instalacion.
+	Los nombres de las carpetas son variables que el usuario puede seleccionar durante la instalación.
 	
-	4) Para verificar si falta algun componente y reinstalarlo ejecutar nuevamente ./Installer.sh y el 		instalador lo guiara en la recuperacion de la instalacion.
+	4) Para verificar si falta algun componente y reinstalarlo ejecutar nuevamente ./Installer.sh y el instalador lo guiara en la recuperacion de la instalación.
 
 
 Instrucciones de ejecución:
-	1) Para ejecutar el sistema, en una terminal, estando en el directorio en donde efectuo la instalacion, ingrese al directorio que configuro para los binarios (bin por defecto).
+	1) Para ejecutar el sistema, en una terminal, estando en el directorio en donde efectuó la instalación, ingrese al directorio que configuró para los binarios (bin por defecto). Por ejemplo $cd bin/ .
 	2) Entonces, para ejecutar el comando Initializer.sh lo puede hacer de las siguientes formas:
 	$. Initializer.sh o bien $source Initializer.sh
-	3) En caso de ejecutarse con exito deberia aparecerle una opcion que le permite iniciar el "listener". Esto quiere decir que el sistema se inicializo con exito y puede continuar con lo siguiente. Si se le presenta algun problema, sera informado por el mismo Initializer.
+	3) En caso de ejecutarse con éxito debería aparecerle una opción que le permite iniciar el "listener". Esto quiere decir que el sistema se inicializo con éxito y puede continuar con lo siguiente. Si se le presenta algún problema, será informado por el mismo Initializer.
 	3.1) Si elige no inicializar el listener, puede hacerlo cuando desee a traves del comando Start.sh (ver apartado mas adelante).
-	3.2) Una vez ejecutado el listener este queda corriendo hasta que se lo pare. Para ello debe utilizar el comando Stop.sh (ver apartado mas adelante).
+	3.2) Una vez ejecutado el listener éste queda corriendo hasta que se lo pare. Para ello debe utilizar el comando Stop.sh (ver apartado mas adelante).
 	4) Para empezar a procesar archivos debe dejarlos en la carpeta que configuro para los "arribos" (arribos por defecto).
-	5) Para ver reportes sobre los archivos procesados con filtros y opciones puede hacerlo mediante el comando $reporting.pl
+	5) Para ver reportes sobre los archivos procesados con filtros y opciones puede hacerlo mediante el comando $reporting.pl (requiere haber procesado listas de compras y de precios antes)
 
-Instruccion Start.sh:
-	Si no ejecuto el listener automaticamente y lo desea ejecutar puede hacerlo, desde la terminal en donde inicializo el programa (su sesion), de la siguiente manera:
+Instrucción Start.sh:
+	Si no ejecuto el listener automáticamente y lo desea ejecutar puede hacerlo, desde la terminal en donde inicializó el programa (su sesión), de la siguiente manera:
 	$Start.sh NULL -b listener
-	Recuerde que si no esta inicializado el sistema no se puede avanzar. Para incializarlo siga las instrucciones de ejecucion.
+	Recuerde que si no esta inicializado el sistema no se puede avanzar. Para incializarlo siga las instrucciones de ejecución.
 
 Instruccion Stop.sh:
-	Si desea terminar la ejecucion del listener correctamente, puede hacerlo, desde la terminal en donde inicilizo el programa (su sesion), de la siguiente manera:
+	Si desea terminar la ejecucion del listener correctamente, puede hacerlo, desde la terminal en donde inicilizo el programa (su sesión), de la siguiente manera:
 	$Stop.sh listener
-	Esto solo se puede efectuar desde su sesion (terminal en donde inicializo el sistema).
+	Esto sólo se puede efectuar desde su sesión (terminal en donde inicializo el sistema).

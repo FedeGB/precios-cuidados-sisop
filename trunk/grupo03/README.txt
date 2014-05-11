@@ -19,10 +19,10 @@ El path/dirección absoluto/a a la carpeta descomprimida (grupo03) será referid
 
 Instrucciones para obtener paquete de instalación:
 	1) Insertar el dispositivo de almacenamiento con el archivo tp-so-03c.tgz
-	2) Cree un nuevo directorio
-	3) Copie el archivo tp-so-03c.tgz al directorio creado
+	2) Cree un nuevo directorio en donde desee
+	3) Copie el archivo tp-so-03c.tgz al directorio creado. Esto lo puede hacer mediante el comando $cp <origen> <destino>, siendo el destino el nuevo directorio. Para mas informacion consulte $man cp
 	4) En ese mismo directorio, descomprimir el archivo tp-so-03c.tgz de manera de generar el archivo tp-so-03c.tar. Para ello, puede hacerlo a traves de una terminal. Si no venia trabajando con una terminal, abra una en el directorio donde copio el archivo
-	4.1) Algunos sistemas de linux vienen con la opcion de abrir una terminal en el directorio con el menu que se despliega al hacer click derecho en la ventana de ese directorio. Sino puede abrir una terminal e ir moviendose por los directorios con el comando cd (ver man cd para mas ayuda).
+	4.1) Algunos sistemas de linux vienen con la opcion de abrir una terminal en el directorio con el menu que se despliega al hacer click derecho en la ventana de ese directorio. Sino puede abrir una terminal e ir moviendose por los directorios con el comando cd (ver $man cd para mas ayuda).
 	4.2) Entonces estando en el directorio que contiene el archivo tgz escriba el siguiente comando:
 	$gunzip tp-so-03c.tgz
 	5) Una vez obtenido el archivo .tar, en la misma terminal extraer el contenido de ese archivo con el comando: $tar -xvf tp-so-03c.tar obteniendo finalmente el directorio tp-so-03c.

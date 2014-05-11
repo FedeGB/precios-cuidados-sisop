@@ -110,6 +110,7 @@ Instrucciones de ejecución:
 	3.1) Si elige no inicializar el listener, puede hacerlo cuando desee a traves del comando Start.sh (ver apartado mas adelante).
 	3.2) Una vez ejecutado el listener este queda corriendo hasta que se lo pare. Para ello debe utilizar el comando Stop.sh (ver apartado mas adelante).
 	4) Para empezar a procesar archivos debe dejarlos en la carpeta que configuro para los "arribos" (arribos por defecto).
+	5) Para ver reportes sobre los archivos procesados con filtros y opciones puede hacerlo mediante el comando $reporting.pl
 
 Instruccion Start.sh:
 	Si no ejecuto el listener automaticamente y lo desea ejecutar puede hacerlo, desde la terminal en donde inicializo el programa (su sesion), de la siguiente manera:

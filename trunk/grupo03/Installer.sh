@@ -93,16 +93,78 @@ function salir() {
 }
 
 
-#Procesa la respuesta del usuario en caso de si y sus variantes sigue, sino termina
+#Procesa la respuesta del usuario en caso de si devuelve 0, no devuelve 1 sino se pide que responda de nuevo
 function respuestaSINO() {
-        local ELECCION
-        read ELECCION
-        ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
-        if [ "$ELECCION" != 'si' -a "$ELECCION" != 's' -a "$ELECCION" != '' ]; then
-                $LOG "installer" "$ELECCION"
-                salir $ERROR_USUARIO
+        local ELECCION ELECCION_AUX
+	while : ; do
+	        read ELECCION
+	        ELECCION_AUX=$(echo "$ELECCION" | tr [:upper:] [:lower:])
+	        if [ "$ELECCION_AUX" = 'si' -o "$ELECCION_AUX" = 's' -o "$ELECCION_AUX" = '' ]; then
+        	        $LOG "installer" "$ELECCION"
+			return 0
+	        elif [ "$ELECCION_AUX" = 'no' -o "$ELECCION_AUX" = 'n' ]; then
+			$LOG "installer" "$ELECCION"
+			return 1
+		else
+			echo "$ELECCION es una respuesta invalida, responda si-no"
+			$LOG "installer" "$ELECCION es una respuesta invalida, responda si-no"
+	        fi
+	done
+}
+
+
+#Valida qu sea un numero entero y q haya espacio en disco. Devuelve 0 en caso afirmativo sino 1 
+function validarEspacio() {
+	local espacio=$(df -B"M" ./ | tail -n1 | sed 's/\s//g' | cut -d"M" -f3)
+        echo "$1" | grep -e '^[1-9][0-9]\{1,\}$' > /dev/null
+        if [ $? -eq 0 ]; then
+		if [ $espacio -gt $1 -a $1 -gt 0 ]; then
+			return 0
+		else
+	               	echo -e "Insuficiente espacio en disco.\nEspacio disponible: $espacio Mb.\nEspacio requerido $1 Mb\n Inténtelo nuevamente."
+			$LOG "installer" "Insuficiente espacio en disco.\nEspacio disponible: $espacio Mb.\nEspacio requerido $1 Mb\n Inténtelo nuevamente."
+			return 1
+		fi
+	else
+		echo "Respuesta invalida. Ingrese un entero"
+		$LOG "installer" "Respuesta invalida. Ingrese un entero"
+	return 1
+        fi
+}
+
+
+
+# Valida si el directorio ingresado por el usuario no tiene caracteres inválidos.
+# $1: Path del directorio a validar
+# Retorna 0 si la cadena está vacía, 1 si el path pasado tiene caracteres válidos, 2 en otro caso.
+function validarDirectorio() {
+        local tmp=$IFS count=0
+
+  	local tmp2=$1
+        echo "$tmp2" | grep '^/' > /dev/null
+       	[ $? -eq 0 ] && tmp2=${tmp2#*/}
+        echo "$tmp2" | grep '/$' > /dev/null
+        IFS='/'
+        for campo in $tmp2; do
+		echo "$campo" | grep -e '[[<>:^"\|*?=%$+,;~]' -e ']' -e '^$' -e '//' -e '^\s' -e '\s$' -e '\.$' 		-e '^\.' -e '^-' -e '\.\.' > /dev/null
+                [ $? -eq 0 ] && let ++count
+        done
+        IFS=$tmp
+        if [ $count -eq 0 ]; then
+		return 0
         else
-		$LOG "installer" "$ELECCION"
+        	return 1
+        fi
+
+}
+
+
+function validarExtension() {
+        echo "$1" | grep -e '^[[:alnum:]]\{1,3\}$' > /dev/null
+        if [ $? -eq 0 ]; then
+        	return 0
+        else
+        	return 1
         fi
 }
 
@@ -133,9 +195,7 @@ function chequearFuentes() {
 	fi
 	
 	if [ ${#FALTANTES[@]} -gt 0 ]; then
-		echo -e "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
-		$LOG "installer" "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cancelada."
-		exit $ERROR_DEPENDENCIAS
+		salir $ERROR_DEPENDENCIAS "\nPaquete de instalación incompleto.\nFuentes faltantes: ${FALTANTES[@]}	\nInstalación Cvancelada."
 	fi
 
 	[ -d "${GRUPO}/conf" ] || mkdir "${GRUPO}/conf"
@@ -146,6 +206,9 @@ function terminosYcondiciones() {
 	echo -e "\n\n$TERM_Y_COND"
 	$LOG "installer" "$TERM_Y_COND"
 	respuestaSINO
+	if [ $? = 1 ]; then
+		salir "$ERROR_USUARIO" "El usuario no acepto terminos y condiciones"
+	fi
 }
 
 function chequearPerl() {
@@ -172,8 +235,10 @@ LOGSIZE="${DIRECTORIOS[9]}"
 }
 
 
+
+
 function definirDirectorios() {
-local directorio retorno instalado=0
+local respuesta retorno instalado=0
 while [ $instalado -eq 0 ]; do
         for (( i = 0; i < ${#MENSAJES[@]}; ++i )); do
                 while : ; do
@@ -182,52 +247,81 @@ while [ $instalado -eq 0 ]; do
 	                        echo -n "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "  
 				$LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "
 			else
-	                        echo -n "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "  
-				$LOG "installer" "${MENSAJES[$i]} (${GRUPO}/${DIRECTORIOS[$i]}): "
+	                        echo -n "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "  
+				$LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): "
 			fi
-                        read directorio
-			if [ "$directorio" = '' ]; then
-                                $LOG "installer" "${MENSAJES[$i]} (${DIRECTORIOS[$i]}): ${DIRECTORIOS[$i]}"
+                        read respuesta
+			#Si la respuesta es por defecto sigo a la siguiente pregunta
+			if [ "$respuesta" = '' ]; then
+                                $LOG "installer" "${DIRECTORIOS[$i]}"
 	                        break
-			else
-	                        DIRECTORIOS[$i]="$directorio"
-                                $LOG "installer" "$directorio"
-                                break
+			#Si la respuesta es el tamanio de un archivo lo valido
+			elif [ $i = 3 -o $i = 9 ]; then
+				validarEspacio "$respuesta"
+				if [ $? = 0 ]; then
+	                        	DIRECTORIOS[$i]="$respuesta"
+	                                $LOG "installer" "$respuesta"
+                                	break
+				else
+					continue
+				fi
+
+			#Si la respuesta es la extension del archivo log la valido
+			elif [ "$i" = 8 ]; then
+				validarExtension "$respuesta"
+				if [ $? = 0 ]; then
+	                        	DIRECTORIOS[$i]="$respuesta"
+	                                $LOG "installer" "$respuesta"
+                                	break
+				else
+					echo "$respuesta es una extension invalida, vuelva a intentar"
+	                                $LOG "installer" "$respuesta es una extension invalida, vuelva a intentar"
+					continue
+				fi
+			#Si la respuesta es un nombre de directorio lo valido
+			else 	
+				validarDirectorio "$respuesta"
+				if [ $? = 0 ]; then
+	                        	DIRECTORIOS[$i]="$respuesta"
+	                                $LOG "installer" "$respuesta"
+                                	break
+				else
+					echo "$respuesta es una extension invalida, vuelva a intentar"
+	                                $LOG "installer" "$respuesta es una extension invalida, vuelva a intentar"
+					continue
+				fi
+		
                         fi
                 done
         done
-        # Muestro el estado de la instalación y lo loggeo
+        #Muestro el estado de la instalación y lo loggeo
         clear
-	reasignarDirectorios
 	local HEADERS=("$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER5" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" "$HEADER10" "$HEADER11")
 
         ESTADO_INST="$COPYRIGHT
-${HEADERS[0]}"$CONFDIR"
+${HEADERS[0]}"$GRUPO/$CONFDIR"
 Installer.conf
-${HEADERS[1]}"$BINDIR"
+${HEADERS[1]}"$GRUPO/${DIRECTORIOS[0]}"
 Initializer.sh listener.sh masterlist.sh rating.sh reporting.pl Mover.sh Start.sh Stop.sh logging.sh
-${HEADERS[2]}"$MAEDIR"
+${HEADERS[2]}"$GRUPO/${DIRECTORIOS[1]}"
 asociados.mae super.mae um.tab
-${HEADERS[3]}"$NOVEDIR"
-${HEADERS[4]}"$DATASIZE" Mb
-${HEADERS[5]}"$ACEPDIR"
-${HEADERS[6]}"$INFODIR"
-${HEADERS[7]}"$RECHDIR"
-${HEADERS[8]}"$LOGDIR"/<comando>."$LOGEXT"
-${HEADERS[9]}"$LOGSIZE" Kb        
+${HEADERS[3]}"$GRUPO/${DIRECTORIOS[2]}"
+${HEADERS[4]}"${DIRECTORIOS[3]}" Mb
+${HEADERS[5]}"$GRUPO/${DIRECTORIOS[4]}"
+${HEADERS[6]}"$GRUPO/${DIRECTORIOS[5]}"
+${HEADERS[7]}"$GRUPO/${DIRECTORIOS[6]}"
+${HEADERS[8]}"$GRUPO/${DIRECTORIOS[7]}"/<comando>."${DIRECTORIOS[8]}"
+${HEADERS[9]}"${DIRECTORIOS[9]}" Kb        
 ${HEADERS[10]} LISTA"
 
         echo "$ESTADO_INST"
         $LOG "installer" "$ESTADO_INST"
         echo -e "\nEstá de acuerdo con la configuración de instalación? (Si - No): "
         $LOG "installer" "Está de acuerdo con la configuración de instalación? (Si - No): "
-        read ELECCION
-        ELECCION=$(echo "$ELECCION" | tr [:upper:] [:lower:])
-        [ "$ELECCION" = 'si' -o "$ELECCION" = 's' -o "$ELECCION" = '' ] && instalado=1
-	if [ "$ELECCION" == '' ]; then
-	      	$LOG "installer" "Si"
-	else
-	      	$LOG "installer" "$OPCION"
+	respuestaSINO
+	if [ $? = 0 ]; then
+		reasignarDirectorios
+		instalado=1
 	fi
 done
 
@@ -247,64 +341,64 @@ function GuardarDatos() {
 
 
 function instalarDirectorios() {
-echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
-$LOG "installer" "Iniciando Instalación. Está Ud. seguro (Si - No): "
-respuestaSINO
+	echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
+	$LOG "installer" "Iniciando Instalación. Está Ud. seguro (Si - No): "
+	respuestaSINO
+	if [ $? = 1 ]; then
+		salir "$ERROR_USUARIO" "El usuario no estaba seguro de continuar la instalacion"
+	fi
 
-# Creo la estructura de directorios
-echo "Creando Estructuras de Directorios"
-MAEDIR2="$MAEDIR/precios"
-MAEDIR3="$MAEDIR/precios/proc"
-ACEPDIR2="$ACEPDIR/proc"
-INFODIR2="$INFODIR/pres"
+	# Creo la estructura de directorios
+	echo "Creando Estructuras de Directorios"
+	MAEDIR2="$MAEDIR/precios"
+	MAEDIR3="$MAEDIR/precios/proc"
+	ACEPDIR2="$ACEPDIR/proc"
+	INFODIR2="$INFODIR/pres"
 
-DIRECTORIOS2=( "$BINDIR" "$MAEDIR" "$MAEDIR2" "$MAEDIR3" "$NOVEDIR" "$ACEPDIR" "$ACEPDIR2" "$INFODIR" "$INFODIR2" "$RECHDIR" "$LOGDIR" )
+	DIRECTORIOS2=( "$BINDIR" "$MAEDIR" "$MAEDIR2" "$MAEDIR3" "$NOVEDIR" "$ACEPDIR" "$ACEPDIR2" "$INFODIR" "$INFODIR2" "$RECHDIR" "$LOGDIR" )
 
-for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
-        CrearJerarquia "${DIRECTORIOS2[$i]}"
-done
-
-
-echo "Instalando Archivos Maestros y Tablas"
-local MAE_ARCHIVOS
-for file in $(ls ${SRCDIR}/*.mae); do
-        cp "$file" "$MAEDIR"
-        file=${file##*/}
-        MAE_ARCHIVOS+="${file#$BASE}"'$'
-done
-
-local TAB_ARCHIVOS
-for file in $(ls ${SRCDIR}/*.tab); do
-        cp "$file" "$MAEDIR"
-        file=${file##*/}
-        TAB_ARCHIVOS+="${file#$BASE}"'$'
-done
+	for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
+        	CrearJerarquia "${DIRECTORIOS2[$i]}"
+	done
 
 
-echo "Instalando Programas y Funciones"
-local SCRIPT_ARCHIVOS
-for script in "${SCRIPTS[@]}"; do
-        cp "${SRCDIR}/${script}" "$BINDIR"
-        chmod u+x "${BINDIR}/${script}"
-        SCRIPT_ARCHIVOS+="${script}"'$'
-done
+	echo "Instalando Archivos Maestros y Tablas"
+	local MAE_ARCHIVOS
+	for file in $(ls ${SRCDIR}/*.mae); do
+        	cp "$file" "$MAEDIR"
+	        file=${file##*/}
+        	MAE_ARCHIVOS+="${file#$BASE}"'$'
+	done
+
+	local TAB_ARCHIVOS
+	for file in $(ls ${SRCDIR}/*.tab); do
+        	cp "$file" "$MAEDIR"
+        	file=${file##*/}
+        	TAB_ARCHIVOS+="${file#$BASE}"'$'
+	done
 
 
+	echo "Instalando Programas y Funciones"
+	local SCRIPT_ARCHIVOS
+	for script in "${SCRIPTS[@]}"; do
+        	cp "${SRCDIR}/${script}" "$BINDIR"
+        	chmod u+x "${BINDIR}/${script}"
+        	SCRIPT_ARCHIVOS+="${script}"'$'
+	done
 
-echo "Actualizando la configuración del sistema"
-local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR DATASIZE ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE )
-local VALORES=("$GRUPO" "${CONFDIR}" "${BINDIR}" "${MAEDIR}" "${NOVEDIR}" "${DATASIZE}" "${ACEPDIR}" "${INFODIR}" "${RECHDIR}"  "${LOGDIR}" "${LOGEXT}" "${LOGSIZE}")
+	echo "Actualizando la configuración del sistema"
+	local COMPONENTES=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR DATASIZE ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE )
+	local VALORES=("$GRUPO" "${CONFDIR}" "${BINDIR}" "${MAEDIR}" "${NOVEDIR}" "${DATASIZE}" "${ACEPDIR}" "${INFODIR}" "${RECHDIR}"  "${LOGDIR}" "${LOGEXT}" "${LOGSIZE}")
 
-# Guardo las decisiones del usuario
-for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
-        GuardarDatos "${COMPONENTES[$i]}" "${VALORES[$i]}"
-done
+	#Guardo las decisiones del usuario
+	for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
+        	GuardarDatos "${COMPONENTES[$i]}" "${VALORES[$i]}"
+	done
 
-# Guardo la ubicación de los archivos
-GuardarDatos "MAEFILES" "$MAE_ARCHIVOS"
-GuardarDatos "TABFILES" "$TAB_ARCHIVOS"
-GuardarDatos "SCRIPTFILES" "$SCRIPT_ARCHIVOS"
-
+	#Guardo la ubicación de los archivos
+	GuardarDatos "MAEFILES" "$MAE_ARCHIVOS"
+	GuardarDatos "TABFILES" "$TAB_ARCHIVOS"
+	GuardarDatos "SCRIPTFILES" "$SCRIPT_ARCHIVOS"
 }
 
 function instalacionNormal() {
@@ -328,7 +422,7 @@ function instalacionNormal() {
 }
 
 function reinstalacion() {
-DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
+	DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
 	$LOG 'installer' 'Comprobando Instalación existente'
         local RESUMEN="$COPYRIGHT\n\n"
@@ -348,21 +442,21 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
 			continue		
 		fi
 		if [ "${REG_NOMBRE[$i]}" = 'LOGDIR' ]; then
-			RESUMEN+="${HEADERS2[$i]}${GRUPO}/$reg/<comando>."
+			RESUMEN+="${HEADERS2[$i]}$GRUPO/$reg/<comando>."
 			continue
 		fi
 		if [ "${REG_NOMBRE[$i]}" = 'CONFDIR' -o "${REG_NOMBRE[$i]}" = 'BINDIR' -o "${REG_NOMBRE[$i]}" = 'MAEDIR' ]; then
-			RESUMEN+="${HEADERS2[$i]}""${GRUPO}/$reg\n"
-			if [ -e "${GRUPO}/$reg" ]; then
-        			RESUMEN+='Archivos existentes:\n'$(ls "${GRUPO}/$reg")"\n"
+			RESUMEN+="${HEADERS2[$i]}$GRUPO/$reg\n"
+			if [ -e "$GRUPO/$reg" ]; then
+        			RESUMEN+='Archivos existentes:\n'$(ls "$GRUPO/$reg")"\n"
 		        else
-                	        DIRFALTANTES=("${DIRFALTANTES[@]}" "${GRUPO}/$reg")
+                	        DIRFALTANTES=("${DIRFALTANTES[@]}" "$GRUPO/$reg")
                 	fi	
 		elif [ "${REG_NOMBRE[$i]}" = 'LOGEXT' -o "${REG_NOMBRE[$i]}" = 'LOGDIR' ]; then
 			continue
 		else
-        		[ -e "${GRUPO}/$reg" ] || DIRFALTANTES=("${DIRFALTANTES[@]}" "${GRUPO}/$reg")
-			RESUMEN+="${HEADERS2[$i]}""$reg\n"
+        		[ -e "$GRUPO/$reg" ] || DIRFALTANTES=("${DIRFALTANTES[@]}" "$GRUPO/$reg")
+			RESUMEN+="${HEADERS2[$i]}""$GRUPO/$reg\n"
 		fi
 	done
 
@@ -415,6 +509,10 @@ DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$
                 echo -e "$RESUMEN"
                 $LOG "installer" "$RESUMEN"
 		respuestaSINO
+		if [ $? = 1]; then
+			salir "$ERROR_USUARIO" "El usuario no deseo completa la instalacion"
+		fi
+
 
                 # Reinstalo lo q falta
                 echo -e "Restaurando Estructuras de Directorio\n"

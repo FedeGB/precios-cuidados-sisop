@@ -1,3 +1,6 @@
+
+
+
 #!/usr/bin/perl 
 
 #use warnings;
@@ -18,8 +21,8 @@ if ($ENVINIT == 0){
 }
 
 $path_maestro_super="$GRUPO/$MAEDIR/super.mae";
-$path_dir_listasDeCompraPresupuestadas="$GRUPO/$INFODIR/pres/";						#"INFODIR/pres/";
-$path_dir_informes="$GRUPO/$INFODIR/";													#"INFODIR/";
+$path_dir_listasDeCompraPresupuestadas="$GRUPO/$INFODIR/pres/";						
+$path_dir_informes="$GRUPO/$INFODIR/";													
 $regex_campo_faltante='[0-9]';
 
 
@@ -34,7 +37,7 @@ sub menu {
 
 	my @opciones_de_menu = ("\n============================================================================\n","Bienvenido a la sección de reportes\n\n", "-a (ayuda)\n",
 				"-w (grabar)\n", "-r (precio de referencia)\n",
-				"-m (menor precio)\n", "-d (donde comprar)\n", "-f (precio faltante)\n", "-x (filtra por provincia y supermercado)\n"
+				"-m (menor precio)\n", "-d (donde comprar)\n", "-f (precio faltante)\n", "-mr (menor precio mas precio de referencia)\n", "-dr (donde comprar mas precio de referencia)\n", "-x (filtra por provincia y supermercado)\n"
 				, "-u (filtra por usuario comprador)\n", "-s (salir)\n", "Por favor, elija las opciones para su reporte y/o -s para salir.\n");
 
 
@@ -43,6 +46,9 @@ sub menu {
 	while ($parametros_menu !~ /-s/) {
 		print @opciones_de_menu;
 		$parametros_menu = (<STDIN>); #chop $parametros_menu;
+
+		#Creo un flag para las salidas vacías, sin impresiones de detalle en el resultado de las consultas.
+		$result_consulta = 0;
 
 		#Verifico si no va a salir antes de cargar el hash del super.mae
 		if ($parametros_menu =~ "-f|-r|-d|-m|-x") {&abrir_maestro_super;}
@@ -56,13 +62,15 @@ sub menu {
 		if ($parametros_menu =~ /-f/) {&rep_precio_faltante;}
 		if ($parametros_menu =~ /-mr/ ) {&rep_menor_precio_mas_referencia;}
 		if ($parametros_menu =~ /-dr/ ) {&donde_comprar_mas_referencia;}
+		
+		if ($result_consulta == 0) {print "\n\n\nLa busqueda para su consulta no produjo ninguna coincidencia con la base de datos correspondiente\n\n\n"}; if ($filtro_w) {print INFORME "\n\n\nLa búsqueda para su consulta no produjo ninguna coincidencia con la base de datos correspondiente\n\n\n";} 
 
 		close (SUPERMERCADOS);
 		close (INFODIR);
 		close (INFORME);
 		close (OCP_DIR);
 		close (OCP);
-		
+
 	}
 
 }
@@ -207,11 +215,11 @@ sub rep_precios_referencia {
 			if ($campos_OCP[2] < 100) {
 				if ($filtro_x) {
 					if($lista_elegida =~ /$hash_super{$campos_OCP[2]}/){
-					print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} 
+					print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";}; $result_consulta = 1;
 					}
 				}
 				else
-					{print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} 
+					{print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} ; $result_consulta = 1;
 				}
 			}
 		}
@@ -245,11 +253,11 @@ sub rep_precio_faltante {
 			if ($campos_OCP[4] !~ /$regex_campo_faltante/) {
 				if ($filtro_x) {
 					if($lista_elegida =~ /$hash_super{$campos_OCP[2]}/){
-					print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} 
+					print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} ; $result_consulta = 1;
 					}
 				}
 				else
-					{print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} 
+					{print "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n"; if ($filtro_w) {print INFORME "$campos_OCP[0] $campos_OCP[1] $campos_OCP[3] $campos_OCP[4] $hash_super{$campos_OCP[2]}\n";} ; $result_consulta = 1;
 				}				
 			}				
 		}
@@ -298,17 +306,17 @@ sub rep_menor_precio {
 							
 		}
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios.
-		#rehago la lista devuelta por los values del hash ordenada por item 			
-		for $linea_actual (  values(%hash_items_menores_precios) ){      #&ordenar_array_registros_OCP      					
+		# rehago la lista devuelta por los values del hash ordenada por item 			
+		for $linea_actual (  sort {$a <=> $b} values(%hash_items_menores_precios) ){  
 
 			@campos_hash_items_menores_precios= split (/;/, $linea_actual); 
 			if ($filtro_x) { 
 				if($lista_elegida =~ /$hash_super{$campos_hash_items_menores_precios[2]}/){	
-				print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} 
+				print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} ; $result_consulta = 1;
 				}
 			}
 			else
-				{print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} 
+				{print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} ; $result_consulta = 1;
 			}
 			
 		}
@@ -363,17 +371,17 @@ sub rep_donde_comprar {
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios ordenandolos por SUPER_ID segun el string $SUPER_ID_presentes .
 		for $SUPER_ID_actual (split (/;/, $SUPER_ID_presentes)) {
 
-			for $linea_actual (  values(%hash_items_menores_precios)){ 
+			for $linea_actual ( sort {$a <=> $b} values(%hash_items_menores_precios)){ 
 
 				@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 				if ($SUPER_ID_actual eq $campos_hash_items_menores_precios[2]) {
 					if ($filtro_x) { 
 						if($lista_elegida =~ /$hash_super{$campos_hash_items_menores_precios[2]}/){	
-						print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} 
+						print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} ; $result_consulta = 1;
 						}
 					}
 					else
-						{print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} 
+						{print " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";  if ($filtro_w) {print INFORME " $campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]}\n";} ; $result_consulta = 1;
 					}
 					
 				}
@@ -439,7 +447,7 @@ sub rep_menor_precio_mas_referencia {
 							
 		}
 		#Ahora imprimo el hash cargado con los items (registros) de menores precios.
-		for $linea_actual (  values(%hash_items_menores_precios)){ 
+		for $linea_actual ( sort {$a <=> $b} values(%hash_items_menores_precios)){ 
 
 			@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 			#Aplico el filtro_x para supermercados-provincias elegidos por el usuario																
@@ -449,11 +457,11 @@ sub rep_menor_precio_mas_referencia {
 					if ($campos_hash_items_menores_precios[4] <= $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]}) { $asteriscos= '*'}
 					elsif ($campos_hash_items_menores_precios[4] > $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]}) { $asteriscos= '**'}
 							
-						print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n";} 
+						print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n";} ; $result_consulta = 1;
 					
 				}
 				else{
-					print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n";} 
+					print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n";} ; $result_consulta = 1;
 					}
 			}
 		}
@@ -515,7 +523,7 @@ sub donde_comprar_mas_referencia {
 			#Aplico el filtro_x para supermercados-provincias elegidos por el usuario																
 			if ($filtro_x && $lista_elegida =~ /$hash_super{$SUPER_ID_actual}/ || $filtro_x == 0){
 
-				for $linea_actual (  values(%hash_items_menores_precios)){ 
+				for $linea_actual ( sort {$a <=> $b} values(%hash_items_menores_precios)){ 
 
 					@campos_hash_items_menores_precios= split (/;/, $linea_actual);
 					if ($SUPER_ID_actual eq $campos_hash_items_menores_precios[2]) {
@@ -523,15 +531,15 @@ sub donde_comprar_mas_referencia {
 							if (exists ($hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]})) {
 							if ($campos_hash_items_menores_precios[4] <= $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]}) { $asteriscos= '*'}
 							elsif ($campos_hash_items_menores_precios[4] > $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]}) { $asteriscos= '**'}
-							print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n";} 
+							print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} $hash_items_precios_cuidados{$campos_hash_items_menores_precios[0]} $asteriscos\n";} ; $result_consulta = 1;
 							}
 
 						else{
-							print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n";} 
+							print "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n"; if ($filtro_w) {print INFORME "$campos_hash_items_menores_precios[0] $campos_hash_items_menores_precios[1] $campos_hash_items_menores_precios[3] $campos_hash_items_menores_precios[4] $hash_super{$campos_hash_items_menores_precios[2]} no encontrado ***\n";} ; $result_consulta = 1;
 						}
 					}
 				}
-				print "\n"; if ($filtro_w) {print INFORME ;} 
+				print "\n"; if ($filtro_w) {print INFORME "\n";} 
 			}
 		}
 	}	
@@ -539,23 +547,5 @@ sub donde_comprar_mas_referencia {
 }
 
 
-
-
-
-
-sub ordenar_array_registros_OCP  {
-
-	
-	#local @lista_entrada= @_; print "La lista de keys de entrada es:" .@_."\n";
-	local @lista_salida;
-	#my @lista_ordenada = sort {$a <=> $b} @lista_entrada; print "La lista de keys ordenada es:" .@lista_ordenada."\n";
-	#Copio cada elemento value del hash desde la lista ordenada de los keys hacia la lista salida
-	for ( sort {$a <=> $b} keys %hash_items_menores_precios) {
-
-		push (@lista_salida, $hash_items_menores_precios{$_}); #print "La lista de salida es:" .@lista_salida."\n";
-	}
-
-return (@lista_salida);
-}
 
 

@@ -58,9 +58,17 @@ Instrucciones para obtener paquete de instalación:
 Instrucciones de instalación:
 	1) Desde una terminal diríjase al directorio grupo03 y asigne permisos de ejecución al instalador ejecutando el comando $chmod u+x Installer.sh.
 
-	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de configuración y copiado del sistema hacia su PC.
+	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de configuración y copiado del sistema hacia su PC. En caso de haber una instalacion previa salte al paso 10 de reinstalacion.
 
-	3) Una vez terminada la instalación, el sistema mostrará un mensaje indicando que la misma ha concluido exitosamente y habrá creado la siguiente estructura de directorios dentro de la carpeta grupo03 ademas de la carpeta src/ con los archivos fuentes:
+	4) El instalador chequeara que se encuentren los archivos fuentes necesarios, iniciara un logger y mostrara los directorios donde se almacenaran al informacion de log y configuracion final. Se le preguntara si acepta los terminos y condiciones. Responda "Si" en caso de estar de acuerdo o "No" aceptar y el proceso de instalacion finalizara.
+	
+	5) A continuacion se le pediran los nombres de los directorios y algunos parametros del sistema. Entre parentesis se le indica la opcion por defecto que puedeser seleccion pulsando enter. Los nombres de directorios ingresados deben ser validos y se crearan en la carpeta grupo03. Tambien le sera posible determinar tamaños de archivos, los cuales deben ser numeros enteros y que no superen la cantidad de espacio disponible en el sistema. La extension de los archivos log deben ser de 3 caracteres validos.
+
+	6) Una vez ingresados todos los datos se le mostrara los valores finales de los parametros del sistema y se le preguntara si esta de acuerdo con la configuracion. Ingrese "Si" en caso afirmativo, "No" en caso de volver a ingresar los datos (Paso anterior).
+
+	7) Se le informa que se iniciara la instalacion. Teclee "Si" en caso de completar o "No" si desea salir.
+		
+	8) Una vez terminada la instalación, el sistema mostrará un mensaje indicando que la misma ha concluido exitosamente y habrá creado la siguiente estructura de directorios dentro de la carpeta grupo03 ademas de la carpeta src/ con los archivos fuentes:
 
 grupo03/
 
@@ -99,10 +107,13 @@ grupo03/
 	
 	LOGDIR/
 
-	Los nombres de las carpetas son variables que el usuario puede seleccionar durante la instalación.
+	Los nombres de las carpetas son variables genericas que el usuario puede seleccionar durante la instalación.
 	
-	4) Para verificar si falta algun componente y reinstalarlo ejecutar nuevamente ./Installer.sh y el instalador lo guiara en la recuperacion de la instalación.
+	9) Para verificar si falta algun componente y reinstalarlo ejecutar nuevamente ./Installer.sh y el instalador lo guiara en la recuperacion de la instalación (Paso 10).
 
+	10) Se le informaran las carpetas y archivos presentes y faltantes. En caso de que no hayan faltantes el proceso de reinstalacion finaliza. De lo contrario se le preguntara si desea completar la instalacion. Responda "Si" en caso de continuar o "No" si desea finalizar.
+
+	11) Se le mostraran la lista de directorios y archivos restaurados, finalizando la reinstalacion.
 
 Instrucciones de ejecución:
 	1) Para ejecutar el sistema, en una terminal, estando en el directorio en donde efectuó la instalación, ingrese al directorio que configuró para los binarios (bin por defecto). Por ejemplo $cd bin/ .

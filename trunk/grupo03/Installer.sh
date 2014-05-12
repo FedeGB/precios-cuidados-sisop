@@ -5,10 +5,10 @@
 
 # Codigos de error:
 ERROR0=0	
-ERROR_DEPENDENCIAS=1
-ERROR_PERL=2	
-ERROR_USUARIO=3	
-ERROR_ARCHIVO=4	
+ERROR_DEPENDENCIAS=1	#Faltan archivos fuentes
+ERROR_PERL=2		#Perl no esta instalado o es una version antigua
+ERROR_USUARIO=3		#El usuario decidio terminar la instalacion
+ERROR_ARCHIVO=4		#Error al leer el archivo de configuracion "Installer.conf"
 
 
 GRUPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -22,7 +22,7 @@ SRCDIR="src"
 VERSION_PERL=5
 SCRIPTS=('Initializer.sh' 'listener.sh' 'masterlist.sh' 'rating.sh' 'reporting.pl' 'Mover.sh' 'Start.sh' 'Stop.sh' 'logging.sh')
 
-#Ubicaciones de directorios
+#Ubicaciones y parametros de directorios y archivos
 BINDIR=bin
 MAEDIR=mae
 NOVEDIR=arribos
@@ -67,7 +67,7 @@ COPYRIGHT="TP SO7508 Primer Cuatrimestre 2014. Tema C Copyright © Grupo $NUMGRU
 TERM_Y_COND="$COPYRIGHT\n\nAl instalar TP SO7508 Primer Cuatrimestre 2014 UD.expresa aceptar los términos y condiciones del \"ACUERDO DE LICENCIA DE SOFTWARE\" incluido en este paquete.\n\nAcepta? (Si - No)"
 MENSAJE_PERL="$COPYRIGHT\n\nPara instalar el TP es necesario contar con Perl 5 o superior. Efectúe su instalación e inténtelo nuevamente.\n\n Proceso de Instalación Cancelado"
 
-#Funciones
+###################Funciones#######################
 
 function showVersion() {
         echo -e "Universidad de Buenos Aires - Facultad de Ingeniería\n7508 Sistemas Operativos\nTrabajo Práctico: RETAILC-$VERSION\nGrupo $NUMGRUPO\n1º cuat. 2014\n"
@@ -82,7 +82,7 @@ function showHelp() {
 }
 
 
-#Sale del script con el codigo pasado en el primer parametro y un mensaje en el segundo
+#Sale del script con el codigo pasado en el primer parametro y un mensaje en el segundo que se muestran por consola y se guardan en el log
 #Se encarga de borrar el archivo de log
 function salir() {
 	echo -e "$2"
@@ -93,7 +93,7 @@ function salir() {
 }
 
 
-#Procesa la respuesta del usuario en caso de si devuelve 0, no devuelve 1 sino se pide que responda de nuevo
+#Procesa la respuesta del usuario. En caso de si o alguna variante devuelve 0, no o alguna variante devuelve 1 sino se pide que responda de nuevo
 function respuestaSINO() {
         local ELECCION ELECCION_AUX
 	while : ; do
@@ -107,13 +107,13 @@ function respuestaSINO() {
 			return 1
 		else
 			echo "$ELECCION es una respuesta invalida, responda si-no"
-			$LOG "installer" "$ELECCION es una respuesta invalida, responda si-no"
+			$LOG "installer" "$ELECCION es una respuesta invalida, responda Si-No"
 	        fi
 	done
 }
 
 
-#Valida qu sea un numero entero y q haya espacio en disco. Devuelve 0 en caso afirmativo sino 1 
+#Valida que sea un numero entero y que haya espacio suficiente en disco. Devuelve 0 en caso afirmativo sino 1 
 function validarEspacio() {
 	local espacio=$(df -B"M" ./ | tail -n1 | sed 's/\s//g' | cut -d"M" -f3)
         echo "$1" | grep -e '^[1-9][0-9]\{1,\}$' > /dev/null
@@ -134,9 +134,7 @@ function validarEspacio() {
 
 
 
-# Valida si el directorio ingresado por el usuario no tiene caracteres inválidos.
-# $1: Path del directorio a validar
-# Retorna 0 si la cadena está vacía, 1 si el path pasado tiene caracteres válidos, 2 en otro caso.
+#Valida si el nombre del directorio ingresado por el usuario tiene un formato correcto. Retorna 0 en caso positivo sino 1.
 function validarDirectorio() {
         local tmp=$IFS count=0
 
@@ -158,7 +156,7 @@ function validarDirectorio() {
 
 }
 
-
+#Valida que la extension pasada como parametro sea a los sumo de 3 caracteres alfanumericos. Devuelve 0 en caso posivo sino 1
 function validarExtension() {
         echo "$1" | grep -e '^[[:alnum:]]\{1,3\}$' > /dev/null
         if [ $? -eq 0 ]; then
@@ -181,6 +179,7 @@ function iniciarLog() {
 }
 
 
+#Chequea la lista de archivos fuentes en el directorio src/ y el directorio conf/ en caso de no existir
 function chequearFuentes() {
 	declare -a local FALTANTES 
 	
@@ -221,6 +220,7 @@ function chequearPerl() {
 }
 
 
+#Reasigna los parametros del sistema de los valores por default a los ingresados po el usuario
 function reasignarDirectorios() {
 BINDIR="${DIRECTORIOS[0]}"
 MAEDIR="${DIRECTORIOS[1]}"
@@ -236,7 +236,7 @@ LOGSIZE="${DIRECTORIOS[9]}"
 
 
 
-
+#Loop en donde el usuario ingresa parametros del sistema
 function definirDirectorios() {
 local respuesta retorno instalado=0
 while [ $instalado -eq 0 ]; do
@@ -327,19 +327,21 @@ done
 
 }
 
-function CrearJerarquia() {
+function crearJerarquia() {
 	if [ ! -d "$1" ]; then
 		mkdir "$1"
 		echo "$1"
         fi
 }
 
-function GuardarDatos() {
+#Guarda variables de configuracion en el archivo Installer.conf
+function guardarDatos() {
         local REG="$1"="$2"=$(whoami)=$(date +"%d/%m/%y %r")
         echo "$REG" >> $CONF_INSTALACION
 }
 
 
+#Crea la jerarquia de directorios, copia los archivos fuentes y guarda los parametros del sistema en el archivo Installer.conf
 function instalarDirectorios() {
 	echo -n "Iniciando Instalación. Está Ud. seguro (Si - No): "
 	$LOG "installer" "Iniciando Instalación. Está Ud. seguro (Si - No): "
@@ -358,7 +360,7 @@ function instalarDirectorios() {
 	DIRECTORIOS2=( "$BINDIR" "$MAEDIR" "$MAEDIR2" "$MAEDIR3" "$NOVEDIR" "$ACEPDIR" "$ACEPDIR2" "$INFODIR" "$INFODIR2" "$RECHDIR" "$LOGDIR" )
 
 	for ((i=0; i <= ${#DIRECTORIOS[@]}; ++i)); do
-        	CrearJerarquia "${DIRECTORIOS2[$i]}"
+        	crearJerarquia "${DIRECTORIOS2[$i]}"
 	done
 
 
@@ -392,15 +394,16 @@ function instalarDirectorios() {
 
 	#Guardo las decisiones del usuario
 	for (( i=0; i < "${#COMPONENTES[@]}"; ++i)); do
-        	GuardarDatos "${COMPONENTES[$i]}" "${VALORES[$i]}"
+        	guardarDatos "${COMPONENTES[$i]}" "${VALORES[$i]}"
 	done
 
 	#Guardo la ubicación de los archivos
-	GuardarDatos "MAEFILES" "$MAE_ARCHIVOS"
-	GuardarDatos "TABFILES" "$TAB_ARCHIVOS"
-	GuardarDatos "SCRIPTFILES" "$SCRIPT_ARCHIVOS"
+	guardarDatos "MAEFILES" "$MAE_ARCHIVOS"
+	guardarDatos "TABFILES" "$TAB_ARCHIVOS"
+	guardarDatos "SCRIPTFILES" "$SCRIPT_ARCHIVOS"
 }
 
+#Secuencia de pasos de una instalacion inicial
 function instalacionNormal() {
 	echo "Inicio de Ejecución del Installer"
 	$LOG "installer" "Inicio de Ejecución del Installer"
@@ -421,10 +424,13 @@ function instalacionNormal() {
 	salir $ERROR0 "Instalación CONCLUIDA"
 }
 
+#Secuencia de pasos de una reinstalacion
 function reinstalacion() {
 	DIRECTORIOS=( "$BINDIR" "$MAEDIR" "$NOVEDIR" "$ACEPDIR" "$INFODIR" "$RECHDIR" "$LOGDIR" "$LOGEXT" "$LOGSIZE" )
 
 	$LOG 'installer' 'Comprobando Instalación existente'
+	
+	#Se construye en la variable resumen un informe con los directorios y archivos presentes y faltantes
         local RESUMEN="$COPYRIGHT\n\n"
 	local EXPR DIR DIRFALTANES ARCHFALTANTES
 	local REG_NOMBRE=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE)
@@ -509,7 +515,7 @@ function reinstalacion() {
                 echo -e "$RESUMEN"
                 $LOG "installer" "$RESUMEN"
 		respuestaSINO
-		if [ $? = 1]; then
+		if [ $? = 1 ]; then
 			salir "$ERROR_USUARIO" "El usuario no deseo completa la instalacion"
 		fi
 

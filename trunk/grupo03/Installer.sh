@@ -432,7 +432,8 @@ function reinstalacion() {
 	
 	#Se construye en la variable resumen un informe con los directorios y archivos presentes y faltantes
         local RESUMEN="$COPYRIGHT\n\n"
-	local EXPR DIR DIRFALTANES ARCHFALTANTES
+	local EXPR DIR
+	declare -a local DIRFALTANES ARCHFALTANTES
 	local REG_NOMBRE=(GRUPO CONFDIR BINDIR MAEDIR NOVEDIR ACEPDIR INFODIR RECHDIR LOGDIR LOGEXT LOGSIZE)
 	local reg_value=("$GRUPO" 'conf' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.' '.')
 	local HEADERS2=('' "$HEADER1" "$HEADER2" "$HEADER3" "$HEADER4" "$HEADER6" "$HEADER7" "$HEADER8" "$HEADER9" )
@@ -523,18 +524,19 @@ function reinstalacion() {
                 # Reinstalo lo q falta
                 echo -e "Restaurando Estructuras de Directorio\n"
 		for DIRECTORIO in "${DIRFALTANTES[@]}"; do
-			CrearJerarquia "$DIRECTORIO"
+			crearJerarquia "$DIRECTORIO"
                 done
 
                 local NOMBRE DIRECCION
                 echo -e "Restaurando Archivos faltantes\n"
 		for ARCHIVO in "${ARCHFALTANTES[@]}"; do
 			NOMBRE=${ARCHIVO##*/}
-                        DIRECCION=${ARCHIVO%/*}
-                        cp "$SRCDIR/$NOMBRE" "$DIRECCION"
-                        for s in "${SCRIPTS[@]}"; do
+			echo "$NOMBRE"
+			DIRECCION=${ARCHIVO%/*}
+            cp "$SRCDIR/$NOMBRE" "$DIRECCION/"
+            for s in "${SCRIPTS[@]}"; do
 				[ "$s" = "$NOMBRE" ] && chmod u+x "$ARCHIVO"
-                        done
+            done
 		done
 	        salir $ERROR0 "Instalación CONCLUIDA"
 	fi

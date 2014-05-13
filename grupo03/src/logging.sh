@@ -7,6 +7,14 @@
 # ERR = ERROR: mensajes de error.
 # Por default, si no se le pase 3er parametro, el tipo de mensaje es informativo
 
+function reducir
+{
+	tail -50 "$1" > "$1.tmp" # Me quedo con las ultimas 50 lineas
+	mv "$1.tmp" "$1" # Piso el viejo con el nuevo
+	echo "Se excedio el limite de $LOGSIZE, se corto el archivo" >> "$1"
+	return 0
+}
+
 if [ $# -lt 2 ] # El 3ro se puede no pasar nada y queda el default
 then
 	echo "Faltan parametros" 
@@ -60,12 +68,3 @@ then
 fi
 
 exit 0
-
-
-function reducir
-{
-	tail -50 "$1" > "$1.tmp" # Me quedo con las ultimas 50 lineas
-	mv "$1.tmp" "$1" # Piso el viejo con el nuevo
-
-	return 0
-}

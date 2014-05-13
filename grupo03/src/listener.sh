@@ -116,10 +116,11 @@ function es_lista_precios
 	fi
 	declare local colaborador=`echo "$validationData" | sed 's~^[0-9]\{8\}-\(.*\)$~\1~'`
 	usuario_es_asociado "$colaborador" "Y"
-	if [[ $? == 1 ]]; then
+	declare local res=$?
+	if [[ $res == 1 ]]; then
 		prob="Asociado inexistente"
 		return 0
-	elif [[ $? == 2 ]]; then
+	elif [[ $res == 2 ]]; then
 		prob="Colaborador inexistente"
 		return 0
 	fi
@@ -167,16 +168,16 @@ while [[ $doCiclo -eq 1 ]]; do
 	do
 		declare local str=`file "$GRUPO/$NOVEDIR/$arch" | sed 's-.*\(text\)$-\1-'`
 		if [[ "$str" != "text" ]]; then
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/$arch" listener
 			logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
 		es_lista_compras "$arch"
 		declare local res=$?
 		if [[ $res -eq 1 ]]; then
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$ACEPDIR/$arch" listener
 		else
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/$arch" listener
 			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
@@ -185,23 +186,25 @@ while [[ $doCiclo -eq 1 ]]; do
 	do
 		declare local str=`file "$GRUPO/$NOVEDIR/$arch" | sed 's-.*\(text\)$-\1-'`
 		if [[ "$str" != "text" ]]; then
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/$arch" listener
 			logging.sh listener "Archivo rechazado: Tipo de archivo invalido"
 			continue
 		fi
+		declare local res
 		es_lista_precios "$arch"
-		declare local res=$?
+		echo $?
+		res=$?
 		if [[ $res -eq 1 ]]; then
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" ""$GRUPO"/"$MAEDIR"/precios/$arch" listener
 		else
-			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+			Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/$arch" listener
 			logging.sh listener "Archivo rechazado: $prob"
 		fi
 	done
 	#Rechazar archivos que no tengan pinta de nada
 	for arch in `ls -1 "$GRUPO/$NOVEDIR/" | grep -v "^[^\.]*-[^\.]*\..*$" | grep -v "^[^\.]*\....$"`;
 	do
-		Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/" listener
+		Mover.sh "$GRUPO/$NOVEDIR/$arch" "$GRUPO/$RECHDIR/$arch" listener
 		logging.sh listener "Archivo rechazado: Estructura de nombre de archivo no identificada"
 	done
 	#Ver si hay que llamar a masterlist

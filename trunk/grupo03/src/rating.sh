@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/
 TABLA="$GRUPO/$MAEDIR/um.tab"
 PROCDIR="$ACEPDIR/proc"
 if [[ ! -f "$GRUPO/$MAEDIR/precios.mae" ]]; then
-	bash logging.sh "Rating" "No se encuentra el archivo precios.mae" "ERR"
+	logging.sh "Rating" "No se encuentra el archivo precios.mae" "ERR"
 	exit -1
 fi
 MAESTRO="$GRUPO/$MAEDIR/precios.mae"
@@ -207,35 +207,35 @@ function validRecord() {
 }
 
 if [[ $ENVINIT -eq 0 ]]; then
-	bash logging.sh "Rating" "Se finaliza el script por no estar seteado el ambiente." "ERR"
+	 logging.sh "Rating" "Se finaliza el script por no estar seteado el ambiente." "ERR"
 	exit -1
 fi
 
-bash logging.sh "Rating" "Inicio de Rating"
+ logging.sh "Rating" "Inicio de Rating"
 oldIFS=$IFS
 IFS=$'\n'
 let cant=0
 cantListas=$(ls -F $GRUPO/$ACEPDIR/ | grep -v \/ | wc -l)
-bash logging.sh "Rating" "Cantidad de listas de compras a procesar: $cantListas "
+ logging.sh "Rating" "Cantidad de listas de compras a procesar: $cantListas "
 for file in $(ls -F $GRUPO/$ACEPDIR/ | grep -v \/); do
 	let cant=cant+1
-	bash logging.sh "Rating" "Archivo a procesar: $file"
+	 logging.sh "Rating" "Archivo a procesar: $file"
 	fileOK=$(checkFile $file)
 	if [[ $fileOK = "0" ]]; then
 		for record in $(cat $GRUPO/$ACEPDIR/$file); do
 			if [[ ! $(validRecord "$record") = "" ]]; then
 				findMatches $record >> "$GRUPO/$INFODIR/pres/$file"
 			else
-				bash logging.sh "Rating" "Ignorado registro de lista de compras del archivo $file por formato inválido." "WAR"
+				 logging.sh "Rating" "Ignorado registro de lista de compras del archivo $file por formato inválido." "WAR"
 			fi
 		done
-		bash logging.sh "Rating" "Generada lista de compra $file en el directorio $GRUPO/$INFODIR/pres/" 
-		bash Mover.sh "$GRUPO/$ACEPDIR/$file" "$GRUPO/$PROCDIR/"
+		 logging.sh "Rating" "Generada lista de compra $file en el directorio $GRUPO/$INFODIR/pres/" 
+		 Mover.sh "$GRUPO/$ACEPDIR/$file" "$GRUPO/$PROCDIR/$file"
 	else 
-		bash logging.sh "Rating" "El archivo $file se rechaza por estar $fileOK" "WAR"
-		bash Mover.sh "$GRUPO/$ACEPDIR/$file" "$GRUPO/$RECHDIR/"
+		 logging.sh "Rating" "El archivo $file se rechaza por estar $fileOK" "WAR"
+		 Mover.sh "$GRUPO/$ACEPDIR/$file" "$GRUPO/$RECHDIR/$file"
 	fi
 done
 IFS=$oldIFS
-bash logging.sh "Rating" "Fin de Rating."
+ logging.sh "Rating" "Fin de Rating."
 exit 0

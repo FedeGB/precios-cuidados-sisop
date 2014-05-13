@@ -28,7 +28,7 @@ if ! [ -f "$ORG" ]
 then
 	if ! [ -z "$CMD" ]
 	then
-		./logging.sh "$CMD" "No existe el archivo de origen: $ORG" "ERR" 
+		logging.sh "$CMD" "No existe el archivo de origen: $ORG" "ERR" 
 	fi
 	echo "No existe el archivo de origen: $ORG"
 	exit -2
@@ -40,7 +40,7 @@ if ! [ -d "$DESTDIR" ]
 then
 	if ! [ -z "$CMD" ]
 	then
-		./logging.sh "$CMD" "No existe el directorio de destino: $DESTDIR" "ERR" 
+		logging.sh "$CMD" "No existe el directorio de destino: $DESTDIR" "ERR" 
 	fi
 	echo "No existe el directorio de destino: $DESTDIR"
 	exit -2
@@ -54,7 +54,7 @@ then
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.1"
 		if ! [ -z "$CMD" ]
 		then
-			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.1 pues $DESTNAME ya existia"
+			logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.1 pues $DESTNAME ya existia"
 		fi
 		exit 0
 	else
@@ -63,7 +63,7 @@ then
 		mv "$ORG" "$DESTDIR/dup/$DESTNAME.$N"
 		if ! [ -z "$CMD" ]
 		then
-			./logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.$N pues $DESTNAME ya existia"
+			logging.sh "$CMD" "Se movio $ORG a $DESTDIR/dup/$DESTNAME.$N pues $DESTNAME ya existia"
 		fi
 		exit 0
 	fi
@@ -71,7 +71,7 @@ else
 	mv "$ORG" "$DEST"
 	if ! [ -z "$CMD" ]
 		then
-			./logging.sh "$CMD" "Se movio $ORG a $DEST"
+			logging.sh "$CMD" "Se movio $ORG a $DEST"
 	fi
 fi
 

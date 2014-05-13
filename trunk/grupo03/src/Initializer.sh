@@ -217,12 +217,12 @@ function verificarArchivos
  	while [ $VALIDO -eq 0 ]
  	do
  		read CHOICE
- 		if [ $CHOICE == "s" ]
+ 		if [ "$CHOICE" == "s" ]
  		then
  			$GRUPO/$BINDIR/logging.sh "Initializer" "Inicializando listener"
  			Start.sh "Initializer" "-b" "listener" # Verifica si el proceso está corriendo o no
  			VALIDO=1
- 		elif [ $CHOICE == "n" ]
+ 		elif [ "$CHOICE" == "n" ]
  		then
  			$GRUPO/$BINDIR/logging.sh "Initializer" "El listener no fue inicializado"
  			VALIDO=1

@@ -136,7 +136,7 @@ function disparar_proceso
 		if [[ ! -z `pgrep "$2"` || ! -z `pgrep "$3"` ]]; then
 			logging.sh listener "Invocacion de $procName pospuesta para el proximo ciclo"
 		else
-			"$2.sh" &
+			Start.sh listener -b "$2"
 			res=$?
 			declare local pid=$(pgrep "$2")
 			if [[ $res -ne 0 ]]; then

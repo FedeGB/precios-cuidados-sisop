@@ -23,8 +23,8 @@ Instrucciones para obtener paquete de instalación:
 		$mkdir DEST
 		Siendo DEST el nombre del directorio a crear
 	3) Copie el archivo tp-so-03c.tgz al directorio creado. Esto lo puede hacer mediante el comando $cp <origen> <destino>, siendo el destino el nuevo directorio creado anteriormente y origen el directorio del .tgz (por ejemplo /media/A341-4AB3/tp-so-03c.tgz). Para mas información consulte $man cp
-	4) En ese mismo directorio, descomprimir el archivo tp-so-03c.tgz de manera de generar el archivo tp-so-03c.tar. Para ello, puede hacerlo a traves de una terminal. Si no venia trabajando con una terminal, abra una en el directorio donde copio el archivo.
-	4.1) Algunos sistemas de linux vienen con la opcion de abrir una terminal en el directorio con el menu que se despliega al hacer click derecho en la ventana de ese directorio. Sino puede abrir una terminal e ir moviendose por los directorios con el comando cd (ver $man cd para mas ayuda).
+	4) Descomprimir el archivo tp-so-03c.tgz de manera de generar el archivo tp-so-03c.tar. Para ello, puede hacerlo a traves de una terminal. Si no venia trabajando con una terminal, abra una en el directorio donde copio el archivo.
+	4.1) Algunos sistemas de linux vienen con la opcion de abrir una terminal en el directorio con el menu que se despliega al hacer click derecho en la ventana de ese directorio. Sino puede abrir una terminal e ir moviendose por los directorios con el comando cd. Ejemplo: $cd DEST (ver $man cd para mas ayuda).
 	4.2) Entonces estando en el directorio que contiene el archivo tgz (copiado, no el del dispositivo) escriba el siguiente comando:
 	$gunzip tp-so-03c.tgz
 	5) Una vez obtenido el archivo .tar, en la misma terminal extraer el contenido de ese archivo con el comando: $tar -xvf tp-so-03c.tar obteniendo finalmente el directorio tp-so-03c.
@@ -56,7 +56,7 @@ Instrucciones para obtener paquete de instalación:
 				um.tab
 
 Instrucciones de instalación:
-	1) Desde una terminal diríjase al directorio grupo03 y asigne permisos de ejecución al instalador ejecutando el comando $chmod u+x Installer.sh.
+	1) Desde una terminal diríjase al directorio grupo03 (en la misma terminal donde venia trabajando sería $cd tp-so-03c/grupo03) y asigne permisos de ejecución al instalador ejecutando el comando $chmod u+x Installer.sh.
 
 	2) Ahora ejecute el comando $./Installer.sh, el programa de instalación lo guiará durante el proceso de configuración y copiado del sistema hacia su PC. En caso de haber una instalacion previa salte al paso 10 de reinstalacion.
 
